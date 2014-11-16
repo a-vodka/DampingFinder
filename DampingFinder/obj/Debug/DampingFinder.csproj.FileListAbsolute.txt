@@ -12,3 +12,23 @@ c:\users\artem reva\documents\visual studio 2013\Projects\DampingFinder\DampingF
 c:\users\artem reva\documents\visual studio 2013\Projects\DampingFinder\DampingFinder\obj\Debug\DampingFinder.pdb
 c:\users\artem reva\documents\visual studio 2013\Projects\DampingFinder\DampingFinder\bin\Debug\NAudio.dll
 c:\users\artem reva\documents\visual studio 2013\Projects\DampingFinder\DampingFinder\bin\Debug\NAudio.xml
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\DampingFinder.exe
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\DampingFinder.pdb
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\DampingFinder.csprojResolveAssemblyReference.cache
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\CustomSpinner.baml
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\CustomSpinner.g.cs
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\App.g.cs
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\DampingFinder_MarkupCompile.cache
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\bin\Debug\DampingFinder.exe
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\bin\Debug\DampingFinder.pdb
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\bin\Debug\NAudio.dll
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\bin\Debug\NAudio.xml
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\MainWindow.g.cs
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\GeneratedInternalTypeHelper.g.cs
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\DampingFinder_MarkupCompile.lref
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\MainWindow.baml
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\DampingFinder.g.resources
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\DampingFinder.Properties.Resources.resources
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\DampingFinder.csproj.GenerateResource.Cache
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\GraphFFT.baml
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\GraphFFT.g.cs

@@ -1,6 +1,7 @@
 ﻿<Window x:Name="mainwin" x:Class="DampingFinder.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:DampingFinder"
         Title="MainWindow" Height="600" Width="1000" MinWidth="900" MinHeight="500">
     <Grid>
 
@@ -135,8 +136,42 @@
                                     <DropShadowEffect ShadowDepth="0" Direction="270" Color="#FF9E9E9E" BlurRadius="8"/>
                                 </Border.Effect>
                             </Border>
-                            <Label Foreground="#FF595959" Content="WIKI" HorizontalAlignment="Left" VerticalContentAlignment="Bottom" Padding="0,5,24,5" FontSize="16" BorderThickness="0,0,0,4" BorderBrush="#FF93D8FF" FontWeight="Bold" Margin="20,0,0,0" />
-                            <TextBlock Text="Форма волны —  наглядное представление формы сигнала, такого как волна, распространяющегося в физической среде, или его абстрактное представление." Padding="20" TextWrapping="Wrap" Foreground="Black" Grid.Row="1" />
+                            <Label Foreground="#FF595959" Content="НАСТРОЙКИ" HorizontalAlignment="Left" VerticalContentAlignment="Bottom" Padding="0,5,24,5" FontSize="16" BorderThickness="0,0,0,4" BorderBrush="#FF93D8FF" FontWeight="Bold" Margin="20,0,0,0" />
+
+                            <ListBox x:Name="frequencyList" Grid.Row="1" Margin="20,20,0,0" Background="{x:Null}" BorderBrush="{x:Null}" BorderThickness="0" MaxHeight="200" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="False">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="{x:Type ListBoxItem}">
+                                        <Setter Property="Margin" Value="0"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="BorderThickness" Value="0" />
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Height="60" VerticalAlignment="Top" Width="{Binding Path=ActualWidth, ElementName=frequencyList}" Grid.Row="1" >
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40"/>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="18"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Ellipse Fill="#FFFF8282" HorizontalAlignment="Center" Height="13" VerticalAlignment="Center" Width="13" StrokeThickness="0"/>
+                                            <Rectangle Fill="#FFFF8282" StrokeThickness="0" HorizontalAlignment="Center" Width="1" />
+
+                                            <CheckBox Content="{Binding Frequency, Mode=TwoWay}" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Background="White" Margin="10,0,0,0" BorderThickness="2" BorderBrush="Gainsboro" FontWeight="Bold" Foreground="#FF5D5D5D" IsChecked="True" Padding="10,0,0,0" />
+
+                                            <local:CustomSpinner Grid.Column="3" Value="{Binding WindowWidth, Mode=TwoWay}" />
+
+                                            <CheckBox Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Background="White" BorderThickness="2" BorderBrush="Gainsboro" FontWeight="Bold" Foreground="#FF5D5D5D" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            
+
+
                         </Grid>
 
                         <Grid Margin="20,40,40,20" Grid.Column="1">
@@ -164,23 +199,7 @@
                                 </Border.Effect>
                             </Border>
                             <Label Foreground="#FF595959" Content="VISUALIZATION" HorizontalAlignment="Left" VerticalContentAlignment="Bottom" Padding="0,5,24,5" FontSize="16" BorderThickness="0,0,0,4" BorderBrush="#FF93D8FF" FontWeight="Bold" Margin="20,0,0,0" />
-                            <ScrollViewer x:Name="scrollFFT" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Visible" Margin="20,20,20,0" VerticalAlignment="Bottom" Grid.Row="1">
-                                <Grid>
-                                    <Grid x:Name="gridCanvasFFT" />
-                                    <Grid x:Name="gridChooserFFT">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="1" />
-                                            <ColumnDefinition />
-                                            <ColumnDefinition Width="1" />
-                                        </Grid.ColumnDefinitions>
-
-                                        <Rectangle Fill="#CCFFFFFF" StrokeThickness="0" />
-                                        <Rectangle Fill="#CCFFFFFF" StrokeThickness="0" Grid.Column="2" />
-                                        <GridSplitter Cursor="SizeWE" Width="2" Background="#FF57ACCD" />
-                                        <GridSplitter Cursor="SizeWE" Width="2" Background="#FF57ACCD" Grid.Column="2" HorizontalAlignment="Left" />
-                                    </Grid>
-                                </Grid>
-                            </ScrollViewer>
+                            <Grid x:Name="gridGraphFFT" Grid.Row="1" Margin="20,20,20,0" />
                         </Grid>
 
                         <Grid Grid.Row="2" Margin="40,20,40,40" Grid.ColumnSpan="2">
@@ -482,6 +501,7 @@
 
         </Grid>
 
+        
 
     </Grid>
 </Window>

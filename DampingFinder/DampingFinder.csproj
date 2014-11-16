@@ -61,7 +61,24 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Colors.cs" />
+    <Compile Include="CustomSpinner.xaml.cs">
+      <DependentUpon>CustomSpinner.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="FFTListItem.cs" />
+    <Compile Include="Frequency.cs" />
+    <Compile Include="GraphFFT.xaml.cs">
+      <DependentUpon>GraphFFT.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ObjectManager.cs" />
     <Compile Include="WavFile.cs" />
+    <Page Include="CustomSpinner.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="GraphFFT.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

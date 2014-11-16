@@ -12,8 +12,10 @@ namespace DampingFinder
     class WavFile
     {
         // Поля
-        private alglib.complex[] _fftComplex;
-        private alglib.complex[] _inverseFFT;
+        private alglib.complex[] _fftComplex;                       // массив с БПФ.
+        List<float> fftArray = new List<float>();                   // список с модулем БПФ.
+        List<Frequency> Frequensys = new List<Frequency>();         // список выделенных частот.
+
 
         // Свойства
         public int BitsPerSample { get; private set; }
@@ -23,6 +25,16 @@ namespace DampingFinder
         public int Bitrate { get; private set; }
         public int Length { get; private set; }
         public float[] Data { get; private set; }
+
+        public alglib.complex[] ComplexFFT 
+        {
+            get { return this._fftComplex; }
+        }
+
+        public List<float> modulFFT
+        {
+            get { return this.fftArray; }
+        }
 
         // Конструктор
         public WavFile(string path)
@@ -64,6 +76,12 @@ namespace DampingFinder
                     // Указатель на позицию в массиве байтов. Показывает от куда начинать читать след. значение.
                     int bDataPosition = 0;
 
+                    if (BitsPerSample != 32)
+                    {
+                        System.Windows.Forms.MessageBox.Show(BitsPerSample + "BPS doesn't support! Sorry");
+                        return;
+                    }
+
                     // Глубина звука в байтах.
                     int soundDepth = BitsPerSample / 8;
 
@@ -88,8 +106,8 @@ namespace DampingFinder
             Canvas result = new Canvas();
 
             // Если моно - пока ничего не делаем. По-умолчанию у нас 2 канала.
-            if (Channels == 1)
-                return null;
+            //if (Channels == 1)
+            //    return null;
 
             // Масштаб
             double mx = 0;
@@ -176,7 +194,8 @@ namespace DampingFinder
         }
 
 
-        public Canvas FFT()
+        
+        public void FFT()
         {
             // проверка массива данных, он должен иметь размер 2 в степени икс.
             double dataLog = Math.Log(Data.Length, 2);
@@ -201,201 +220,11 @@ namespace DampingFinder
             // делаем БПФ.
             alglib.fftc1d(ref _fftComplex);
 
-            // берем модуль от результата.
-            List<float> fftArray = new List<float>();
+            // берем модуль от результата.            
             for (int i = 0; i < _fftComplex.Length; i++)
                 fftArray.Add((float)Math.Sqrt(_fftComplex[i].x * _fftComplex[i].x + _fftComplex[i].y * _fftComplex[i].y));
-
-
-            // Рисуем полученный результат.
-            int xPos = 0;
-            int arrayPosition = 0;
-            float max = 0;
-            int batch = 20;
-            int canvasHeight = 300;
-            List<float> arr = new List<float>();
-            Canvas result = new Canvas();
-            
-            double mx = 0;
-            for (int t = 0; t < fftArray.Count; t++)
-                mx = Math.Max(fftArray[t], mx);
-            double scale = canvasHeight / mx;
-
-            
-            do
-            {
-                // 
-                if ((arrayPosition + batch) > fftArray.Count)
-                    batch = fftArray.Count - arrayPosition;
-                arr = fftArray.GetRange(arrayPosition, batch);
-                max = 0;
-                for (int i = 0; i < batch; i++)
-                    max = Math.Max(Math.Abs(arr[i]), max);
-
-                Line line = new Line();
-                line.X1 = xPos;
-                line.Y1 = canvasHeight;
-                line.X2 = xPos;
-                line.Y2 = canvasHeight - max * scale;
-
-                line.StrokeThickness = 1;
-                line.Stroke = Brushes.Red;
-                result.Children.Add(line);
-
-                
-                xPos++;
-                arrayPosition += batch;
-            }
-            while (arrayPosition < 22050);
-
-            result.Background = Brushes.Beige;
-            result.Width = xPos;
-            result.Height = canvasHeight;
-
-            return result;
         }
 
-
-        public Canvas inverseFFT(int startPos, int length)
-        {
-            startPos *= 20;
-            length *= 20;
-            // создаем массив комплексных чисел, для подачи на БПФ.
-            _inverseFFT = new alglib.complex[_fftComplex.Length];
-            for (int i = 0; i < _fftComplex.Length; i++)
-            {
-                if (i > startPos && i < startPos + length)
-                    _inverseFFT[i] = _fftComplex[i];
-                else
-                    _inverseFFT[i] = new alglib.complex(0, 0);
-            }
-
-            // делаем обратное БПФ.
-            alglib.fftc1dinv(ref _inverseFFT);
-
-            // Создаем для удобства список из массива, который прошел обратное БПФ.
-            List<float> fftArray = new List<float>();
-            for (int i = 0; i < _inverseFFT.Length; i++)
-            {
-                fftArray.Add((float)_inverseFFT[i].x);
-                //fftArray.Add((float)Math.Sqrt(_inverseFFT[i].x*_inverseFFT[i].x + _inverseFFT[i].y*_inverseFFT[i].y));
-            }
-
-           
-            // Рисуем полученный результат.
-            int xPos = 0;
-            int arrayPosition = 0;
-            float max = 0;
-            int batch = 100;
-            int canvasHeight = 300;
-            List<float> arr = new List<float>();
-            Canvas result = new Canvas();
-
-            double mx = 0;
-            for (int t = 0; t < fftArray.Count; t++)
-                mx = Math.Max(fftArray[t], mx);
-            double scale = (canvasHeight / 2) / mx;
-
-            do
-            {
-                // 
-                if ((arrayPosition + batch) > fftArray.Count)
-                    batch = fftArray.Count - arrayPosition;
-                arr = fftArray.GetRange(arrayPosition, batch);
-                max = 0;
-                for (int i = 0; i < batch; i++)
-                {
-                    if (Math.Abs(arr[i]) > Math.Abs(max))
-                        max = arr[i];                    
-                }
-
-                Line line = new Line();
-                line.X1 = xPos;
-                line.Y1 = canvasHeight / 2;
-                line.X2 = xPos;
-                line.Y2 = canvasHeight / 2 - max * scale;
-
-                line.StrokeThickness = 1;
-                line.Stroke = Brushes.Red;
-                result.Children.Add(line);
-
-                xPos++;
-                arrayPosition += batch;
-            }
-            while (arrayPosition < fftArray.Count);
-
-            result.Background = Brushes.Beige;
-            result.Width = xPos;
-            result.Height = canvasHeight;
-
-            return result;
-        }
-
-
-        public Canvas envelopeGraph(int startPosition = 0)
-        {
-            Canvas result = new Canvas();
-
-            int xPos = 0;
-
-            List<List<float>> waves = new List<List<float>>();
-            List<float> wave = new List<float>();
-
-            // Достаем положительные волны.
-            for (int i = 0; i < _inverseFFT.Length; i++)
-            {
-                if (_inverseFFT[i].x > 0)
-                    wave.Add((float)_inverseFFT[i].x);
-                else
-                    if (wave.Count > 0)
-                    {
-                        waves.Add(new List<float>(wave));
-                        wave.Clear();
-                    }
-            }
-
-            
-            // Ищем максимумы волн.
-            List<float> graph = new List<float>();
-            for (int i = 0; i < waves.Count; i++)
-            {
-                float max = 0;
-                for (int k = 0; k < waves[i].Count; k++)
-                    max = Math.Max(waves[i][k],max);
-                graph.Add(max);
-            }
-
-            // Масштаб.
-            float m = 0;
-            for (int i = 0; i < graph.Count; i++)
-                m = Math.Max(graph[i], m);
-            float scale = 280 / m;
-
-            // Рисуем график.
-            for (int j = 0; j < graph.Count; j++)
-            {
-                Line line = new Line();
-                line.X1 = xPos;
-                line.Y1 = 300 - graph[j] * scale;
-                line.X2 = xPos + 1;
-                line.Y2 = 300 - graph[j + 1] * scale;
-
-                line.StrokeThickness = 1;
-                line.Stroke = Brushes.Red;
-                result.Children.Add(line);
-
-                xPos+=2;
-
-                if (j > 3000)
-                    break;
-            }
-
-            result.Background = Brushes.Beige;
-            result.Width = xPos;
-            result.Height = 300;
-
-            return result;
-        }
         
     }
 }

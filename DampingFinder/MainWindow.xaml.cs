@@ -40,46 +40,8 @@ namespace DampingFinder
         {
             InitializeComponent();
             worker = new BackgroundWorker();
-            worker.DoWork += worker_DoWork;
-            worker.RunWorkerCompleted += worker_RunWorkerCompleted;
         }
-
         
-        // Запуск действия асинхронно.
-        private void runAsync(int jobID)
-        {
-            startProcessing();
-            worker.RunWorkerAsync(jobID);
-        }
-
-        // Выполнение асинхронного действия.
-        private void worker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            switch((int)e.Argument)
-            {
-                case 1:
-                    {
-                        gridCanvasFFT.Children.Add(currentFile.FFT());
-                        break;
-                    }
-                case 2:
-                    {
-                        // временное решение. вместо одного окна будет массив.
-                        int t = (int)gridChooserFFT.ColumnDefinitions[0].ActualWidth;
-                        int t2 = (int)gridChooserFFT.ColumnDefinitions[1].ActualWidth;
-                        if (currentFile != null)
-                            scrollInverseFFT.Content = currentFile.inverseFFT(t, t2);
-                        break;
-                    }
-            }
-        }
-
-        // Действие по окончанию выполнения асинхронного действия.
-        private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            stopProcessing();
-        }
-
         // Обработчик кнопки "открыть". Загружаем звуковой файл и достаем из него всю необходимую о нем инфу.
         private void btnOpenFile_Click(object sender, RoutedEventArgs e)
         {
@@ -91,13 +53,13 @@ namespace DampingFinder
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 // Создаем объект файла и цепляем ссылку в currentFile.
-                currentFile = new WavFile(dialog.FileName);
+                ObjectManager.CurrentFile = new WavFile(dialog.FileName);
 
                 // Отрисовываем waveform и выводим на экран
-                scrollWaveform.Content = currentFile.getWaveform();
+                scrollWaveform.Content = ObjectManager.CurrentFile.getWaveform();
 
                 // Отображаем информацию о файле.
-                showFileInfo(currentFile);
+                showFileInfo(ObjectManager.CurrentFile);
 
                 // Закрываем начальный "экран" с выбором файла.
                 gridIntro.Visibility = System.Windows.Visibility.Collapsed;
@@ -108,7 +70,8 @@ namespace DampingFinder
                 wizardOpenNextStep();
                 
                 // Отрисовываем БПФ.
-                // gridCanvasFFT.Children.Add(currentFile.FFT());
+                ObjectManager.CurrentFile.FFT();
+                gridGraphFFT.Children.Add(new GraphFFT(ObjectManager.CurrentFile.modulFFT));
             }       
         }
 
@@ -155,7 +118,7 @@ namespace DampingFinder
                 case 3:
                     {
                         //runAsync(SOLVE_FFT);
-                        gridCanvasFFT.Children.Add(currentFile.FFT());
+                        //gridCanvasFFT.Children.Add(currentFile.FFT());
                         rectR02.Fill = Colors.Blue;
                         rectL03.Fill = Colors.Blue;
                         el03.Fill = Colors.Blue;
@@ -167,10 +130,10 @@ namespace DampingFinder
                     {
                         //runAsync(SOLVE_INVERSE_FFT);
                         // временное решение. вместо одного окна будет массив.
-                        int t = (int)gridChooserFFT.ColumnDefinitions[0].ActualWidth;
-                        int t2 = (int)gridChooserFFT.ColumnDefinitions[1].ActualWidth;
-                        if (currentFile != null)
-                            scrollInverseFFT.Content = currentFile.inverseFFT(t, t2);                        
+                        //int t = (int)gridChooserFFT.ColumnDefinitions[0].ActualWidth;
+                        //int t2 = (int)gridChooserFFT.ColumnDefinitions[1].ActualWidth;
+                        //if (currentFile != null)
+                        //    scrollInverseFFT.Content = currentFile.inverseFFT(t, t2);                        
                         rectR03.Fill = Colors.Blue;
                         rectL04.Fill = Colors.Blue;
                         el04.Fill = Colors.Blue;
@@ -180,7 +143,7 @@ namespace DampingFinder
                     }
                 case 5:
                     {
-                        scrollGraph.Content = currentFile.envelopeGraph();
+                        //scrollGraph.Content = currentFile.envelopeGraph();
                         rectR04.Fill = Colors.Blue;
                         rectL05.Fill = Colors.Blue;
                         el05.Fill = Colors.Blue;
