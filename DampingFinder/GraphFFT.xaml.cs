@@ -24,15 +24,6 @@ namespace DampingFinder
         private int _scaleXPos = 8;
         private double[] SCALE_ARRAY = new double[14] { 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 3, 4, 5 };
 
-        // Массив выделенных частот.
-        //private List<Frequency> _frequencys = new List<Frequency>();
-        //public List<Frequency> Frequencys
-        //{
-        //    get;
-        //    private set;
-        //}
-
-
         /// <summary>
         /// Конструктор.
         /// </summary>
@@ -40,10 +31,41 @@ namespace DampingFinder
         public GraphFFT(List<double> listPoints)
         {
             InitializeComponent();
-            this._listPoints = listPoints.GetRange(0, 22050);                           // Запоминаем массив со значениями.
-            Draw();
-            //autoDetectFrequencys();
+            this._listPoints = listPoints;                           // Запоминаем массив со значениями.
+            transformFFT();
+            Draw();           
             comboScale.SelectedIndex = _scaleXPos;
+            ObjectManager.currentFftControl = this;
+        }
+
+
+        /// <summary>
+        /// Приводит массив ФФТ к виду: 1 элемент массива = 1 Гц.
+        /// </summary>
+        private void transformFFT()
+        {
+            // Показывает сколько Гц в одном элементе массива.
+            int t1 = ObjectManager.CurrentFile.SampleRate;
+            int t2 = ObjectManager.CurrentFile.SamplesCount;
+            double elementWeight = (double)ObjectManager.CurrentFile.SampleRate / (double)ObjectManager.CurrentFile.SamplesCount;
+            int newSize;
+            List<double> newArray = new List<double>();
+
+            if (elementWeight < 1)
+            {
+                newSize = (int)(1 / elementWeight);
+
+                for (int i = 0; i < _listPoints.Count; i += newSize)
+                {
+                    if (_listPoints.Count - i < newSize)
+                        newSize = _listPoints.Count - i;
+
+                    newArray.Add(_listPoints.GetRange(i, newSize).Max());
+                }
+
+                _listPoints.Clear();
+                _listPoints = newArray.GetRange(0, 22050);
+            }
         }
 
 
@@ -322,5 +344,24 @@ namespace DampingFinder
         {
             autoDetectFrequencys();
         }
+
+
+
+        /// <summary>
+        /// Возвращает список выделенных частот.
+        /// </summary>
+        /// <returns></returns>
+        public List<Frequency> getSelectedFrequencys()
+        {
+            List<Frequency> result = new List<Frequency>();
+
+            foreach (var item in _frequencysList)
+            {
+                result.Add(new Frequency(item, 20));
+            }
+
+            return result;
+        }
+
     }
 }

@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:DampingFinder"
-        Title="MainWindow" Height="600" Width="1000" MinWidth="900" MinHeight="500">
+        Title="Damping" Height="600" Width="1000" MinWidth="900" MinHeight="500" WindowStartupLocation="CenterScreen">
     <Grid>
 
         <Grid x:Name="gridMain">

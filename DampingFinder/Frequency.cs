@@ -8,9 +8,9 @@ using System.Windows.Media;
 
 namespace DampingFinder
 {
-    class Frequency
+    public class Frequency
     {
-        private alglib.complex[] _inverseFFT;
+        private alglib.complex[] _inverseFFT = new alglib.complex[ObjectManager.CurrentFile.ComplexFFT.Length];
 
         /// <summary>
         /// Обратное преобразрвание Фурье.
@@ -57,7 +57,7 @@ namespace DampingFinder
         /// <summary>
         /// Частота.
         /// </summary>
-        public int FrequencyN { get; set; }
+        public int FrequencyNumber { get; set; }
 
 
 
@@ -67,14 +67,18 @@ namespace DampingFinder
         public int WindowWidth { get; set; }
 
 
-        public Frequency(int freq) 
+        public Frequency(int freq, int width) 
         {
-            FrequencyN = freq;
+            FrequencyNumber = freq;
+            WindowWidth = width;
         }
 
+
+        // Создаем для удобства список из массива, который прошел обратное БПФ.
+        List<double> fftArray = new List<double>();
         public Canvas getInverseFFT()
-        {
-            int startPos = FrequencyN - (WindowWidth / 2);
+        {            
+            int startPos = FrequencyNumber - (WindowWidth / 2);
             int endPos = startPos + WindowWidth;
             for (int i = 0; i < ObjectManager.CurrentFile.ComplexFFT.Length; i++)
             {
@@ -87,18 +91,17 @@ namespace DampingFinder
             // делаем обратное БПФ.
             alglib.fftc1dinv(ref _inverseFFT);
 
-            // Создаем для удобства список из массива, который прошел обратное БПФ.
-            List<float> fftArray = new List<float>();
-            for (int i = 0; i < _inverseFFT.Length; i++)            
-                fftArray.Add((float)_inverseFFT[i].x);
+            
+            for (int i = 0; i < _inverseFFT.Length; i++)
+                fftArray.Add((double)_inverseFFT[i].x);
 
             // Рисуем полученный результат.
             int xPos = 0;
             int arrayPosition = 0;
-            float max = 0;
+            double max = 0;
             int batch = 100;
             int canvasHeight = 300;
-            List<float> arr = new List<float>();
+            List<double> arr = new List<double>();
             Canvas result = new Canvas();
 
             double mx = 0;
@@ -148,41 +151,41 @@ namespace DampingFinder
 
             int xPos = 0;
 
-            List<List<float>> waves = new List<List<float>>();
-            List<float> wave = new List<float>();
+            List<List<double>> waves = new List<List<double>>();
+            List<double> wave = new List<double>();
 
             // Достаем положительные волны.
-            for (int i = 0; i < _inverseFFT.Length; i++)
+            for (int i = 0; i < this.fftArray.Count; i++)
             {
-                if (_inverseFFT[i].x > 0)
-                    wave.Add((float)_inverseFFT[i].x);
+                if (this.fftArray[i] > 0)
+                    wave.Add(this.fftArray[i]);
                 else
                     if (wave.Count > 0)
                     {
-                        waves.Add(new List<float>(wave));
+                        waves.Add(new List<double>(wave));
                         wave.Clear();
                     }
             }
 
 
             // Ищем максимумы волн.
-            List<float> graph = new List<float>();
+            List<double> graph = new List<double>();
             for (int i = 0; i < waves.Count; i++)
             {
-                float max = 0;
+                double max = 0;
                 for (int k = 0; k < waves[i].Count; k++)
                     max = Math.Max(waves[i][k], max);
                 graph.Add(max);
             }
 
             // Масштаб.
-            float m = 0;
+            double m = 0;
             for (int i = 0; i < graph.Count; i++)
                 m = Math.Max(graph[i], m);
-            float scale = 280 / m;
+            double scale = 280 / m;
 
             // Рисуем график.
-            for (int j = 0; j < graph.Count; j++)
+            for (int j = 0; j < graph.Count; j+=2)
             {
                 Line line = new Line();
                 line.X1 = xPos;

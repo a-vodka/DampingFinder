@@ -25,6 +25,7 @@ namespace DampingFinder
         public int Bitrate { get; private set; }
         public int Length { get; private set; }
         public int[] Data { get; private set; }
+        public int SamplesCount { get; set; }
 
         public alglib.complex[] ComplexFFT 
         {
@@ -98,6 +99,9 @@ namespace DampingFinder
                         }
                         catch { }
                     }
+
+                    // Считаем количество сэмплов в файле.
+                    SamplesCount = Length / (Channels * BitsPerSample / 8);
                 }
             }
         }

@@ -91,6 +91,7 @@ namespace DampingFinder
         }
 
 
+        List<Frequency> fq = new List<Frequency>();
         // Делает доступным следующий шаг.
         private void wizardOpenNextStep()
         {
@@ -99,6 +100,9 @@ namespace DampingFinder
 
             wizardCurrentStep++;
             wizardOpenedSteps[wizardCurrentStep - 1] = true;
+
+            if(ObjectManager.currentFftControl != null)
+                fq = ObjectManager.currentFftControl.getSelectedFrequencys();
 
             switch (wizardCurrentStep)
             {
@@ -129,12 +133,8 @@ namespace DampingFinder
                     }
                 case 4:
                     {
-                        //runAsync(SOLVE_INVERSE_FFT);
-                        // временное решение. вместо одного окна будет массив.
-                        //int t = (int)gridChooserFFT.ColumnDefinitions[0].ActualWidth;
-                        //int t2 = (int)gridChooserFFT.ColumnDefinitions[1].ActualWidth;
-                        //if (currentFile != null)
-                        //    scrollInverseFFT.Content = currentFile.inverseFFT(t, t2);                        
+                        scrollInverseFFT.Content = fq[0].getInverseFFT();
+                        scrollGraph.Content = fq[0].getGraph();
                         rectR03.Fill = Colors.Blue;
                         rectL04.Fill = Colors.Blue;
                         el04.Fill = Colors.Blue;
@@ -144,7 +144,6 @@ namespace DampingFinder
                     }
                 case 5:
                     {
-                        //scrollGraph.Content = currentFile.envelopeGraph();
                         rectR04.Fill = Colors.Blue;
                         rectL05.Fill = Colors.Blue;
                         el05.Fill = Colors.Blue;
