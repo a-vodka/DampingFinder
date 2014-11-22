@@ -1,0 +1,111 @@
+﻿<UserControl x:Class="DampingFinder.SliceControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="200" d:DesignWidth="600">
+    <Grid Background="White">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+
+        <Button x:Name="btnVis" Cursor="Hand" HorizontalAlignment="Left" Margin="34,0,0,0" Click="btnVis_Click">
+            <Button.Template>
+                <ControlTemplate>
+                    <Grid>
+                        <Label Foreground="#FFD1D1D1" Content="slicer visibility" HorizontalAlignment="Left" VerticalAlignment="Center" FontWeight="Bold" FontSize="10" Grid.Column="1" BorderThickness="0" BorderBrush="#FFACACAC" Padding="5,5,5,5" />
+                    </Grid>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+
+
+        <Grid HorizontalAlignment="Right" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+
+            <Label Foreground="#FFD1D1D1" Content="zoom:" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0" FontWeight="Bold" FontSize="10" Padding="5,2,5,5" />
+            <ComboBox x:Name="comboScale" IsReadOnly="True" Grid.Column="1" Width="60" Height="16" Margin="0,0,5,0" SelectionChanged="comboScale_SelectionChanged" Padding="6,0,5,0" >
+                <ComboBoxItem Content="20%"/>
+                <ComboBoxItem Content="30%"/>
+                <ComboBoxItem Content="40%"/>
+                <ComboBoxItem Content="50%"/>
+                <ComboBoxItem Content="60%"/>
+                <ComboBoxItem Content="70%"/>
+                <ComboBoxItem Content="80%"/>
+                <ComboBoxItem Content="90%"/>
+                <ComboBoxItem Content="100%"/>
+                <ComboBoxItem Content="150%"/>
+                <ComboBoxItem Content="200%"/>
+                <ComboBoxItem Content="300%"/>
+                <ComboBoxItem Content="400%"/>
+                <ComboBoxItem Content="500%"/>
+            </ComboBox>
+        </Grid>
+
+
+        <ScrollViewer x:Name="scroller" Grid.Row="1" Background="Beige" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled">
+            <Grid x:Name="gridContainer" HorizontalAlignment="Left">
+                <Grid x:Name="gridCanvas" HorizontalAlignment="Left" PreviewMouseWheel="gridCanvas_PreviewMouseWheel" />
+                <Grid x:Name="gridSlicer" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="400"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Fill="#FF000000" Opacity=".6" StrokeThickness="0" />
+                    <Rectangle Fill="#FF000000" Opacity=".6" StrokeThickness="0" Grid.Column="2" />
+                    <GridSplitter Width="2" Background="#FF7AB92D" />
+                    <GridSplitter Width="2" Background="#FF7AB92D" Grid.Column="2" HorizontalAlignment="Left" />
+                </Grid>
+            </Grid>
+        </ScrollViewer>
+
+        <Grid Width="24" Height="24" HorizontalAlignment="Left" Margin="5,0,0,0">
+            <Button x:Name="btnPlay" Visibility="Visible" Cursor="Hand" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" Click="btnPlay_Click">
+                <Button.Template>
+                    <ControlTemplate>
+                        <Grid>
+                            <Label />
+                            <Ellipse Width="24" Height="24" Stroke="#FF7AB92D" />
+                            <Polygon Points="0,0 0,10 10,5" Fill="#FF7AB92D" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0,0,0" />
+                        </Grid>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <Button x:Name="btnPause" Visibility="Collapsed" Cursor="Hand" HorizontalAlignment="Left" Margin="0,0,0,0" Click="btnPause_Click">
+                <Button.Template>
+                    <ControlTemplate>
+                        <Grid Margin="0">
+                            <Label />
+                            <Ellipse Width="24" Height="24" Stroke="#FFF54343" />
+                            <Rectangle HorizontalAlignment="Center" VerticalAlignment="Center" StrokeThickness="0" Fill="#FFF54343" Width="8" Height="8" Margin="0" />                            
+                        </Grid>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </Grid>
+
+
+        <Button x:Name="btnCut" Cursor="Hand" UseLayoutRounding="True" HorizontalAlignment="Right" Margin="0,0,15,15" VerticalAlignment="Bottom" Width="32" Height="32" Click="btnCut_Click" Grid.Row="1" Visibility="{Binding Visibility, ElementName=gridSlicer}">
+            <Button.Effect>
+                <DropShadowEffect Direction="270" ShadowDepth="1"/>
+            </Button.Effect>
+            <Button.Template>
+                <ControlTemplate>
+                    <Grid>
+                        <Ellipse Fill="#FF7AB92D" />
+                        <Label Foreground="White" Content="cut" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="10" Grid.Column="1" BorderThickness="0" BorderBrush="#FFACACAC" Padding="5,5,5,5" />
+                    </Grid>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+
+        <MediaElement x:Name="media" Visibility="Collapsed" Volume="1" LoadedBehavior="Manual" MediaEnded="media_MediaEnded" />
+        
+    </Grid>
+</UserControl>

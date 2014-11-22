@@ -9,11 +9,11 @@ using System.Windows.Media;
 
 namespace DampingFinder
 {
-    class WavFile
+    public class WavFile
     {
         // Поля
         private alglib.complex[] _fftComplex;                       // массив с БПФ.
-        List<float> fftArray = new List<float>();                   // список с модулем БПФ.
+        List<double> fftArray = new List<double>();                   // список с модулем БПФ.
         List<Frequency> Frequensys = new List<Frequency>();         // список выделенных частот.
 
 
@@ -24,14 +24,14 @@ namespace DampingFinder
         public int Channels { get; private set; }
         public int Bitrate { get; private set; }
         public int Length { get; private set; }
-        public float[] Data { get; private set; }
+        public int[] Data { get; private set; }
 
         public alglib.complex[] ComplexFFT 
         {
             get { return this._fftComplex; }
         }
 
-        public List<float> modulFFT
+        public List<double> modulFFT
         {
             get { return this.fftArray; }
         }
@@ -76,9 +76,9 @@ namespace DampingFinder
                     // Указатель на позицию в массиве байтов. Показывает от куда начинать читать след. значение.
                     int bDataPosition = 0;
 
-                    if (BitsPerSample != 32)
+                    if (BitsPerSample != 16)
                     {
-                        System.Windows.Forms.MessageBox.Show(BitsPerSample + "BPS doesn't support! Sorry");
+                        System.Windows.Forms.MessageBox.Show(BitsPerSample + "BPS doesn't support! Use 16 BPS with mono or stereo.");
                         return;
                     }
 
@@ -86,35 +86,34 @@ namespace DampingFinder
                     int soundDepth = BitsPerSample / 8;
 
                     // Инициализация массива с числовыми значениями сигнала.
-                    Data = new float[Length / soundDepth];
+                    Data = new int[Length / soundDepth];
 
                     // Читаем из массива по soundDepth байт и конвертируем их во float.
                     for (int i = 0; i < Length / soundDepth; i++)
                     {
-                        Data[i] = BitConverter.ToSingle(bData, bDataPosition);
-                        bDataPosition += soundDepth;
+                        try
+                        {
+                            Data[i] = BitConverter.ToInt16(bData, bDataPosition);
+                            bDataPosition += soundDepth;
+                        }
+                        catch { }
                     }
                 }
             }
         }
 
 
-        // Отрисовка звука. Возвращает канвас с рисунком.
-        public Canvas getWaveform()
+        // Отрисовка звука. Возвращает канвас с рисунком. Stereo.
+        public Canvas getWaveformStereo()
         {
             // Создаем холст, на котором будем рисовать.
             Canvas result = new Canvas();
-
-            // Если моно - пока ничего не делаем. По-умолчанию у нас 2 канала.
-            //if (Channels == 1)
-            //    return null;
 
             // Масштаб
             double mx = 0;
             for (int t = 0; t < Data.Length; t++)
                 mx = Math.Max(Data[t], mx);
             double scale = 120 / mx;
-
 
             // разделить на два массива. левый и правый канал.
             float[] leftChanel = new float[Data.Length / 2];
@@ -135,8 +134,8 @@ namespace DampingFinder
             float maxRight = 0;
 
             int batch = 100;
-            float[] arrLeft = new float[batch];
-            float[] arrRight = new float[batch];
+            int[] arrLeft = new int[batch];
+            int[] arrRight = new int[batch];
 
             do
             {
@@ -176,10 +175,61 @@ namespace DampingFinder
         }
 
 
-        // Метод возвращает выборку значений заданного размера.
-        private float[] getBatchArray(int startPos, int length)
+
+        // Отрисовка звука. Возвращает канвас с рисунком. Mono.
+        public Canvas getWaveformMono()
         {
-            float[] result = new float[length];
+            // Создаем холст, на котором будем рисовать.
+            Canvas result = new Canvas();
+
+            // Масштаб
+            double mx = 0;
+            for (int t = 0; t < Data.Length; t++)
+                mx = Math.Max(Data[t], mx);
+            double scale = 120 / mx;
+
+            // Считаем количество сэмплов в файле.
+            int samples = Length / (Channels * BitsPerSample / 8);
+            int xPos = 0;
+            int arrayPosition = 0;
+            float max = 0;
+            int batch = 100;
+            List<int> arr;
+
+            do
+            {
+                arr = new List<int>(getBatchArray(arrayPosition, batch));
+                max = 0;
+                for (int i = 0; i < batch; i++)
+                    max = Math.Max(Math.Abs(arr[i]), max);
+                
+                Line line = new Line();
+                line.X1 = xPos;
+                line.Y1 = 130 - Math.Abs(max * scale);
+                line.X2 = xPos;
+                line.Y2 = 130 + Math.Abs(max * scale);
+
+                line.StrokeThickness = 1;
+                line.Stroke = Brushes.Red;
+                result.Children.Add(line);
+
+                xPos++;
+                arrayPosition += batch;
+            }
+            while (arrayPosition <= samples);
+
+            result.Background = Brushes.Beige;
+            result.Width = xPos;
+            result.Height = 260;
+
+            return result;
+        }
+
+
+        // Метод возвращает выборку значений заданного размера.
+        private int[] getBatchArray(int startPos, int length)
+        {
+            int[] result = new int[length];
             int position = startPos;
 
             if (startPos + length > Data.Length)
@@ -201,7 +251,7 @@ namespace DampingFinder
             double dataLog = Math.Log(Data.Length, 2);
             int newDataLength = Data.Length;
             bool isDataLengthPowerOfTwo = dataLog % 1 == 0;
-            List<float> dataList = new List<float>(Data);
+            List<int> dataList = new List<int>(Data);
 
             // проверяем, если размер массива не является результатом 2 в степени n, то добиваем его нулями до необходимого размера.
             if (!isDataLengthPowerOfTwo)

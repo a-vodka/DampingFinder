@@ -14,6 +14,8 @@ using System.Windows.Shapes;
 using System.Windows.Media.Animation;
 using System.IO;
 using System.ComponentModel;
+using NAudio.Wave;
+using NAudio.CoreAudioApi;
 
 namespace DampingFinder
 {
@@ -25,12 +27,11 @@ namespace DampingFinder
         const int SOLVE_FFT = 1;
         const int SOLVE_INVERSE_FFT = 2;
         const int SOLVE_DAMPING_GRAPH = 3;
-
-        WavFile currentFile;            // Текущий открытый файл.        
+       
         Grid currentStepGrid;           // Текущая открытая форма, соответствующая нажатой кнопке.
         int currentStep = 1;            // Текущий открытый шаг.
         Button currentStepButton;       // Текущая нажатая кнопка.
-        BackgroundWorker worker;
+        System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
 
         // Визард.
         int wizardCurrentStep = 1;      // Последний открытый шаг.
@@ -39,7 +40,7 @@ namespace DampingFinder
         public MainWindow()
         {
             InitializeComponent();
-            worker = new BackgroundWorker();
+            LoadWasapiDevicesCombo();
         }
         
         // Обработчик кнопки "открыть". Загружаем звуковой файл и достаем из него всю необходимую о нем инфу.
@@ -55,8 +56,8 @@ namespace DampingFinder
                 // Создаем объект файла и цепляем ссылку в currentFile.
                 ObjectManager.CurrentFile = new WavFile(dialog.FileName);
 
-                // Отрисовываем waveform и выводим на экран
-                scrollWaveform.Content = ObjectManager.CurrentFile.getWaveform();
+                // Отрисовываем waveform и выводим на экран                
+                scrollWaveform.Children.Add(new SliceControl(ObjectManager.CurrentFile));
 
                 // Отображаем информацию о файле.
                 showFileInfo(ObjectManager.CurrentFile);
@@ -269,6 +270,11 @@ namespace DampingFinder
 
         private void startProcessing()
         {
+            QuarticEase qa = new QuarticEase()
+            {
+                EasingMode = EasingMode.EaseInOut
+            };
+
             DoubleAnimation da = new DoubleAnimation()
             {
                 From = 0,
@@ -291,43 +297,183 @@ namespace DampingFinder
 
 
 
-        //private void animateMenuContent(Grid showThisGrid)
-        //{
-        //    currentStepGrid.Visibility = System.Windows.Visibility.Collapsed;
-        //    showThisGrid.Visibility = System.Windows.Visibility.Visible;
-
-        //    DoubleAnimation da = new DoubleAnimation()
-        //    {
-        //        From = 80,
-        //        To = 0,
-        //        Duration = TimeSpan.FromMilliseconds(800),
-        //        EasingFunction = qa
-        //    };
-        //    DoubleAnimation oa = new DoubleAnimation()
-        //    {
-        //        From = 0,
-        //        To = 1,
-        //        Duration = TimeSpan.FromMilliseconds(600),
-        //        EasingFunction = qa
-        //    };
-
-        //    for (int i = 0; i < showThisGrid.Children.Count; i++)
-        //    {
-        //        TranslateTransform transform = new TranslateTransform();
-        //        da.BeginTime = TimeSpan.FromMilliseconds(i * 50);
-
-        //        transform.BeginAnimation(TranslateTransform.YProperty, da);
-        //        showThisGrid.Children[i].BeginAnimation(OpacityProperty, oa);
-        //        showThisGrid.Children[i].RenderTransform = transform;
-        //    }
-
-        //    currentStepGrid = showThisGrid;
-        //}
-
-        QuarticEase qa = new QuarticEase()
+        // Закрывает диалог с записью звука.
+        private bool isRecording = false;
+        private string recordingFilePath = String.Empty;
+        private void btnRecordCANCEL_Click(object sender, RoutedEventArgs e)
         {
-            EasingMode = EasingMode.EaseInOut
-        };
+            if (isRecording)
+                return;
+
+            gridRecorder.Visibility = System.Windows.Visibility.Collapsed;
+        }
+
+
+        // Подгружает в комбобокс доступные записывающие устройства.
+        private void LoadWasapiDevicesCombo()
+        {
+            MMDeviceEnumerator deviceEnum = new MMDeviceEnumerator();
+            MMDeviceCollection deviceCol = deviceEnum.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active);
+
+            List<MMDevice> devices = new List<MMDevice>();
+
+            foreach (MMDevice device in deviceCol)
+            {
+                devices.Add(device);
+            }
+
+            comboSoundSource.ItemsSource = devices;
+            if(comboSoundSource.Items.Count != 0)
+                comboSoundSource.SelectedIndex = 0;
+        }
+
+
+        // Открыть менеджер записи звука.
+        private void btnRecordFile_Click(object sender, RoutedEventArgs e)
+        {
+            gridSliceControl.Visibility = System.Windows.Visibility.Collapsed;
+            gridRecordDone.Visibility = System.Windows.Visibility.Collapsed;
+            gridPopUpRecorder.Visibility = System.Windows.Visibility.Visible;
+            gridRecorder.Visibility = System.Windows.Visibility.Visible;
+            LoadWasapiDevicesCombo();
+        }
+
+
+        public WaveIn waveSource = null;
+        public WaveFileWriter waveFile = null;
+        private List<byte> wavData = new List<byte>();
+        private void btnRecordStart_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Directory.Exists(tbRecordFile.Text))
+            {
+                MessageBox.Show("Choose directory first");
+                return;
+            }
+
+            btnRecordStart.IsEnabled = false;
+            btnRecordStop.IsEnabled = true;
+
+            waveSource = new WaveIn();
+            waveSource.WaveFormat = new WaveFormat(44100, 1);
+
+            waveSource.DataAvailable += new EventHandler<WaveInEventArgs>(waveSource_DataAvailable);
+            waveSource.RecordingStopped += new EventHandler<StoppedEventArgs>(waveSource_RecordingStopped);
+
+            waveFile = new WaveFileWriter(recordingFilePath, waveSource.WaveFormat);
+
+            waveSource.StartRecording();
+
+            timer.Interval = new TimeSpan(0, 0, 0, 0, 100);
+            timer.Tick += new EventHandler(timer_Tick);
+            dt = DateTime.Now;
+            timer.Start();
+        }
+
+        DateTime dt = new DateTime();
+        private void timer_Tick(object sender, EventArgs e)
+        {
+            labelRecordTimer.Content = (DateTime.Now - dt).ToString();
+        }
+
+        private void btnRecordStop_Click(object sender, RoutedEventArgs e)
+        {
+            // если таймер не тикает, то запись не ведется, и нечего останавливать.
+            if (!timer.IsEnabled)
+                return;
+
+            btnRecordStop.IsEnabled = false;
+
+            waveSource.StopRecording();
+            timer.Stop();
+
+            gridRecordDone.Visibility = System.Windows.Visibility.Visible;
+        }
+
+        void waveSource_DataAvailable(object sender, WaveInEventArgs e)
+        {
+            if (waveFile != null)
+            {
+                waveFile.Write(e.Buffer, 0, e.BytesRecorded);
+                waveFile.Flush();
+                wavData.AddRange(e.Buffer);
+            }
+        }
+
+        void waveSource_RecordingStopped(object sender, StoppedEventArgs e)
+        {
+            if (waveSource != null)
+            {
+                waveSource.Dispose();
+                waveSource = null;
+            }
+
+            if (waveFile != null)
+            {
+                waveFile.Dispose();
+                waveFile = null;
+            }
+            
+            btnRecordStart.IsEnabled = true;
+        }
+
+        private void btnRecordFileSavePath_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            dialog.ShowNewFolderButton = true;
+            dialog.RootFolder = Environment.SpecialFolder.MyDocuments;
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                recordingFilePath = dialog.SelectedPath + System.IO.Path.DirectorySeparatorChar + "RecordedSound.wav";
+                tbRecordFile.Text = dialog.SelectedPath;
+            }
+        }
+
+
+        private void btnRecroderNext_Click(object sender, RoutedEventArgs e)
+        {
+            // Закрываем начальный "экран" с выбором файла.
+            gridIntro.Visibility = System.Windows.Visibility.Collapsed;
+            gridRecorder.Visibility = System.Windows.Visibility.Collapsed;
+
+            // Отображаем информацию о файле.
+            showFileInfo(ObjectManager.CurrentFile);
+
+            // Указываем текущий открытый "экран".
+            currentStepGrid = gridWaveform;
+
+            scrollWaveform.Children.Add(new SliceControl(ObjectManager.CurrentFile));
+
+            wizardOpenNextStep();
+
+            // Отрисовываем БПФ.
+            ObjectManager.CurrentFile.FFT();
+            gridGraphFFT.Children.Add(new GraphFFT(ObjectManager.CurrentFile.modulFFT));
+        }
+
+        private void btnRecroderDoneCancel_Click(object sender, RoutedEventArgs e)
+        {
+            gridRecordDone.Visibility = System.Windows.Visibility.Collapsed;
+        }
+
+        private void btnRecroderDoneNext_Click(object sender, RoutedEventArgs e)
+        {
+            // Если файл существует, значит он записался, значит можно продолжать.
+            if (File.Exists(recordingFilePath))
+            {
+                gridRecordDone.Visibility = System.Windows.Visibility.Collapsed;
+                gridPopUpRecorder.Visibility = System.Windows.Visibility.Collapsed;
+
+                if (ObjectManager.CurrentFile != null)
+                {
+                    // TODO: подымать алерт о том, что предыдущая сессия не сохранится. А лучше всего перенести эту проверку в само свойство!
+                    ObjectManager.CurrentFile = null;
+                }
+                ObjectManager.CurrentFile = new WavFile(recordingFilePath);
+                gridSliceControlData.Children.Add(new SliceControl(ObjectManager.CurrentFile));
+                gridSliceControl.Visibility = System.Windows.Visibility.Visible;
+            }
+        }
+
 
     }
 }

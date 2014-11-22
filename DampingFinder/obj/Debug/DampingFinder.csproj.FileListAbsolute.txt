@@ -32,3 +32,5 @@ C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\Dampi
 C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\DampingFinder.csproj.GenerateResource.Cache
 C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\GraphFFT.baml
 C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\GraphFFT.g.cs
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\SliceControl.baml
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\SliceControl.g.cs

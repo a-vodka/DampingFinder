@@ -19,7 +19,7 @@ namespace DampingFinder
     /// </summary>
     public partial class GraphFFT : UserControl
     {
-        private List<float> _listPoints = new List<float>();
+        private List<double> _listPoints = new List<double>();
         private List<int> _frequencysList = new List<int>();
         private int _scaleXPos = 8;
         private double[] SCALE_ARRAY = new double[14] { 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 3, 4, 5 };
@@ -37,12 +37,12 @@ namespace DampingFinder
         /// Конструктор.
         /// </summary>
         /// <param name="listPoints">Массив с модулем FFT</param>
-        public GraphFFT(List<float> listPoints)
+        public GraphFFT(List<double> listPoints)
         {
             InitializeComponent();
             this._listPoints = listPoints.GetRange(0, 22050);                           // Запоминаем массив со значениями.
             Draw();
-            autoDetectFrequencys();
+            //autoDetectFrequencys();
             comboScale.SelectedIndex = _scaleXPos;
         }
 
@@ -55,10 +55,10 @@ namespace DampingFinder
             // Рисуем полученный результат.
             int xPos = 0;                               // Позиция по оси Х.
             int arrayPosition = 0;                      // Позиция в массиве.
-            float max = 0;                              // Максимальное значение в выборке из массива.
+            double max = 0;                              // Максимальное значение в выборке из массива.
             int batch = 1;                              // Размер выборки.
             int canvasHeight = 300;                     // Высота графика.
-            List<float> arr = new List<float>();        // Выборка.
+            List<double> arr = new List<double>();      // Выборка.
             Canvas result = new Canvas();               // Холст, на котором рисуем.
 
             double mx = 0;                              // Глобальный максимум в массиве.
@@ -108,50 +108,60 @@ namespace DampingFinder
         private void autoDetectFrequencys()
         {
             // Ищем глобальный максимум.
-            float max = 0;
+            double max = 0;
             for (int i = 0; i < _listPoints.Count; i++)            
                 max = Math.Max(_listPoints[i], max);
             
 
             // Порог для частоты. (90%)
-            float freqTreshold = max * .9F;
+            double freqTreshold = max * .7;
 
             // Ищем частоты, преодолевающие порог и записываем их в массив.
-            for (int i = 0; i < _listPoints.Count; i++)            
+            for (int i = 10; i < _listPoints.Count; i++)            
                 if (_listPoints[i] > freqTreshold)
                     _frequencysList.Add(i);
 
-
-            Dictionary<float, int> freqNormalization = new Dictionary<float, int>();
-            List<int> freqTempMax = new List<int>();
-
-            for (int i = 0; i < _frequencysList.Count; i++)
-            {
-                if (_frequencysList[i + 1] - _frequencysList[i] == 1)
-                {
-                    int k = i + 1;
-                    while (k < _frequencysList.Count && _frequencysList[k] - _frequencysList[i] - freqNormalization.Count == 1)
-                    {
-                        freqNormalization.Add(_listPoints[_frequencysList[k]], _frequencysList[k]);
-                        k++;
-                    }
-
-                    freqNormalization.Add(_listPoints[_frequencysList[i]], _frequencysList[i]);
-
-                    freqTempMax.Add(freqNormalization[freqNormalization.Keys.Max()]);
-                    freqNormalization.Clear();
-                    i = k;
-                    k = 0;
-                }
-                else
-                    freqTempMax.Add(_frequencysList[i]);
-            }
-
-            _frequencysList.Clear();
-            _frequencysList = freqTempMax;
+            // Нормализуем частоты 2 раза, для точности.
+            autoDetectedFreqNormalization();
+            
 
             // Строим окна для каждой найденой частоты.
             refreshWindows();          
+        }
+
+
+        private void autoDetectedFreqNormalization()
+        {
+            Dictionary<double, int> freqNormalization = new Dictionary<double, int>();
+            List<int> freqTempMax = new List<int>();
+
+            if (_frequencysList.Count > 1)
+            {
+                for (int i = 0; i < _frequencysList.Count; i++)
+                {
+                    if (i < _frequencysList.Count && _frequencysList[i + 1] - _frequencysList[i] < 10)
+                    {
+                        int k = i + 1;
+                        while (k < _frequencysList.Count && _frequencysList[k] - _frequencysList[i] - freqNormalization.Count == 1)
+                        {
+                            freqNormalization.Add(_listPoints[_frequencysList[k]], _frequencysList[k]);
+                            k++;
+                        }
+
+                        freqNormalization.Add(_listPoints[_frequencysList[i]], _frequencysList[i]);
+
+                        freqTempMax.Add(freqNormalization[freqNormalization.Keys.Max()]);
+                        freqNormalization.Clear();
+                        i = k;
+                        k = 0;
+                    }
+                    else
+                        freqTempMax.Add(_frequencysList[i]);
+                }
+
+                _frequencysList.Clear();
+                _frequencysList = freqTempMax;
+            }
         }
 
 
@@ -176,17 +186,30 @@ namespace DampingFinder
             gridPicker.ColumnDefinitions.Clear();
             gridPicker.Children.Clear();
 
+            // странный костыль... не помню почему так написал)
+            if (_frequencysList.Count < 1)
+            {
+                MessageBox.Show("Действие не удалось.");
+                return;
+            }
+
+
+
             // Строим разделители. У каждого окна 2 разделителя, 1 слева, 1 справа.
             for (int i = 0; i < _frequencysList.Count; i++)
             {
-                double length1 = 0;
-                double windowsSizes = 0;
-                for (int j = 0; j < gridPicker.ColumnDefinitions.Count; j++)                
-                    windowsSizes += gridPicker.ColumnDefinitions[j].Width.Value;                
+                // 1) не имеет смысла отображать меньше 10, 2) ломается))
+                if (_frequencysList[i] > 10)
+                {
+                    double length1 = 0;
+                    double windowsSizes = 0;
+                    for (int j = 0; j < gridPicker.ColumnDefinitions.Count; j++)
+                        windowsSizes += gridPicker.ColumnDefinitions[j].Width.Value;
 
-                length1 = gridPicker.ColumnDefinitions.Count > 0 ? _frequencysList[i] - windowsSizes - 10 : _frequencysList[i] - 10;
-                gridPicker.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(length1, GridUnitType.Pixel) });
-                gridPicker.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(20, GridUnitType.Pixel) });
+                    length1 = gridPicker.ColumnDefinitions.Count > 0 ? _frequencysList[i] - windowsSizes - 10 : _frequencysList[i] - 10;
+                    gridPicker.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(length1, GridUnitType.Pixel) });
+                    gridPicker.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(20, GridUnitType.Pixel) });
+                }
             }
 
             // Считаем количество затемненных частей графика. (то что снаружи окон)
@@ -297,7 +320,7 @@ namespace DampingFinder
         // Кнопка автоматического выделения частот.
         private void btnAutoDetect_Click(object sender, RoutedEventArgs e)
         {
-            refreshWindows();
+            autoDetectFrequencys();
         }
     }
 }

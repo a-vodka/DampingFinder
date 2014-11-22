@@ -85,9 +85,9 @@
                                 </Border.Effect>
                             </Border>
                             <Label Foreground="#FF595959" Content="VISUALIZATION" HorizontalAlignment="Left" VerticalContentAlignment="Bottom" Padding="0,5,24,5" FontSize="16" BorderThickness="0,0,0,4" BorderBrush="#FF93D8FF" FontWeight="Bold" Margin="20,0,0,0" />
-                            <ScrollViewer x:Name="scrollWaveform" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Visible" Margin="20,20,20,0" VerticalAlignment="Bottom" Grid.Row="1">
+                            <Grid x:Name="scrollWaveform" Margin="20,20,20,0" VerticalAlignment="Bottom" Grid.Row="1">
 
-                            </ScrollViewer>
+                            </Grid>
                         </Grid>
 
                         <Grid Grid.Row="2" Margin="40,20,40,40">
@@ -169,7 +169,7 @@
                                 </ListBox.ItemTemplate>
                             </ListBox>
 
-                            
+
 
 
                         </Grid>
@@ -322,17 +322,32 @@
             <Border BorderBrush="#FFB0B0B0" BorderThickness="1" Margin="50" AllowDrop="True" Grid.Column="1" CornerRadius="2" />
 
             <Grid Width="300" Height="100" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="1*"/>
                     <RowDefinition Height="1*"/>
                 </Grid.RowDefinitions>
-                <Label Content="Drop WAV file here or click on button" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FF4D4D4D"/>
-                <Button x:Name="btnOpenFile" HorizontalAlignment="Center" VerticalAlignment="Center" Cursor="Hand" Click="btnOpenFile_Click" Grid.Row="1">
+                <Label Content="Drop WAV file here or click on button" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FF4D4D4D" Grid.ColumnSpan="2" Margin="46,12"/>
+                <Button x:Name="btnOpenFile" HorizontalAlignment="Right" VerticalAlignment="Center" Cursor="Hand" Click="btnOpenFile_Click" Grid.Row="1" Margin="0,5,10,5">
                     <Button.Template>
                         <ControlTemplate>
                             <Grid>
                                 <Border BorderThickness="1" CornerRadius="2" BorderBrush="#FFD1D1D1" Background="White" />
                                 <Label BorderBrush="Gray" Content="Открыть" Foreground="Gray" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontWeight="Light" Padding="26,12" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Button x:Name="btnRecordFile" HorizontalAlignment="Left" VerticalAlignment="Center" Cursor="Hand" Grid.Row="1" Margin="10,5,0,5" Grid.Column="1" Click="btnRecordFile_Click">
+                    <Button.Template>
+                        <ControlTemplate>
+                            <Grid>
+                                <Border BorderThickness="1" CornerRadius="2" BorderBrush="#FFD1D1D1" Background="White" />
+                                <Ellipse Fill="#FFFF7F7F" Width="12" Height="12" HorizontalAlignment="Left" Margin="10,0,0,0" />
+                                <Label BorderBrush="Gray" Content="Запись" Foreground="Gray" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontWeight="Light" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="5,12" Margin="30,0,15,0" />
                             </Grid>
                         </ControlTemplate>
                     </Button.Template>
@@ -388,8 +403,6 @@
             </Grid>
 
         </Grid>
-
-        <MediaElement x:Name="media" HorizontalAlignment="Left" Height="67" Margin="-96,369,0,0" VerticalAlignment="Top" Width="67" Visibility="Collapsed" Volume="1" LoadedBehavior="Manual"/>
 
         <Grid x:Name="loader" Background="#CC000000" Margin="0,0,0,60" Visibility="Collapsed">
             <Rectangle x:Name="rectLoader" Fill="#CCFFFFFF" Width="20" Height="20" RenderTransformOrigin="0.5,0.5" >
@@ -501,7 +514,164 @@
 
         </Grid>
 
-        
+        <Grid x:Name="gridRecorder" Background="#FFFFE880" Visibility="Collapsed">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="100"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+                <Label Background="#FF4B4B4B" Foreground="White" Content="RECORDER" FontSize="36" FontWeight="Bold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+
+                <Grid x:Name="gridSliceControl" Visibility="Collapsed" Margin="40,40,40,20" Grid.Column="0" VerticalAlignment="Top" Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="60"/>
+                        <RowDefinition Height="1*"/>
+                    </Grid.RowDefinitions>
+                    <Border Background="White" CornerRadius="2" Grid.RowSpan="2" >
+                        <Border.Effect>
+                            <DropShadowEffect ShadowDepth="0" Direction="270" Color="#FF9E9E9E" BlurRadius="8"/>
+                        </Border.Effect>
+                    </Border>
+                    <Label Foreground="#FF595959" Content="VISUALIZATION" HorizontalAlignment="Left" VerticalContentAlignment="Bottom" Padding="0,5,24,5" FontSize="16" BorderThickness="0,0,0,4" BorderBrush="#FF93D8FF" FontWeight="Bold" Margin="20,0,0,0" />
+                    <Grid x:Name="gridSliceControlData" Grid.Row="1" />
+                </Grid>
+
+                <Grid Grid.Row="2" Margin="40,20,40,40" Visibility="{Binding Visibility, ElementName=gridSliceControl}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="btnRecroderCancel" Tag="prev" HorizontalAlignment="Right" VerticalAlignment="Center" Cursor="Hand" MaxWidth="160" Width="120" Margin="0,0,40,0" Click="btnRecordCANCEL_Click">
+                        <Button.Template>
+                            <ControlTemplate>
+                                <Grid>
+                                    <Border BorderThickness="1" CornerRadius="2" BorderBrush="#FFFF7F7F" Background="White" />
+                                    <Label BorderBrush="Gray" Content="Отмена" Foreground="#FFFF7F7F" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="22,15" Background="{x:Null}" />
+                                </Grid>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button x:Name="btnRecroderNext" Tag="next" HorizontalAlignment="Left" VerticalAlignment="Center" Cursor="Hand" MaxWidth="160" Width="120" Grid.Column="1" Margin="40,0,0,0" Click="btnRecroderNext_Click">
+                        <Button.Template>
+                            <ControlTemplate>
+                                <Grid>
+                                    <Border BorderThickness="1" CornerRadius="2" BorderBrush="#FF7AB92D" Background="White" />
+                                    <Label BorderBrush="Gray" Content="Продолжить" Foreground="#FF7AB92D" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="22,15" />
+                                </Grid>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+            </Grid>
+            </ScrollViewer>
+            <Grid x:Name="gridPopUpRecorder" Width="400" Height="260">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="3*"/>
+                </Grid.RowDefinitions>
+                <Border Background="White" BorderBrush="#FFBBBBBB" BorderThickness="1" CornerRadius="2" Grid.RowSpan="2" >
+                    <Border.Effect>
+                        <DropShadowEffect Direction="270" ShadowDepth="0" BlurRadius="8" Color="#FF5B5B5B"/>
+                    </Border.Effect>
+                </Border>
+                <Label Content="Запись звука" Foreground="#FF5B5B5B" FontSize="36" FontWeight="Bold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" BorderBrush="#FF939393" BorderThickness="0,0,0,1" />
+                <Grid Grid.Row="1" >
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="50"/>
+                        <RowDefinition Height="50"/>
+                        <RowDefinition Height="50"/>
+                        <RowDefinition Height="1*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Content="Устройство записи:" Foreground="#FF4D4D4D" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,0,0,0" />
+                    <ComboBox x:Name="comboSoundSource" VerticalAlignment="Center" Grid.Column="1" Margin="20,0" />
+
+                    <Label Content="Сохранить файл в:" Foreground="#FF4D4D4D" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,0,0,0" Grid.Row="1" />
+                    <TextBox x:Name="tbRecordFile" Grid.Row="1" Grid.Column="1" Margin="20,0,60,0" VerticalAlignment="Center" Height="22" BorderThickness="1,1,0,1" VerticalContentAlignment="Center" IsReadOnly="True" IsUndoEnabled="False" />
+                    <Button x:Name="btnRecordFileSavePath" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Content="Open" Margin="0,0,20,0" Height="22" Width="40" BorderBrush="#FFABADB3" Foreground="#FF444444" Click="btnRecordFileSavePath_Click" />
+
+                    <Label x:Name="labelRecordTimer" Content="0:00:00.00" Foreground="#FF747474" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" FontWeight="Thin" FontSize="24" Margin="20,0,0,0" Padding="0,5,5,5" />
+                    <Button x:Name="btnRecordStart" HorizontalAlignment="Left" VerticalAlignment="Center" Cursor="Hand" Grid.Row="2" Margin="25,0,0,0" Click="btnRecordStart_Click">
+                        <Button.Template>
+                            <ControlTemplate>
+                                <Grid>
+                                    <Border BorderThickness="1" CornerRadius="2" BorderBrush="#FFD1D1D1" Background="White" />
+                                    <Ellipse Fill="#FFFF7F7F" Width="12" Height="12" HorizontalAlignment="Left" Margin="10,0,0,0" />
+                                    <Label BorderBrush="Gray" Content="Запись" Foreground="Gray" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontWeight="Light" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="5,12" Margin="25,0,10,0" />
+                                </Grid>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button x:Name="btnRecordStop" HorizontalAlignment="Right" VerticalAlignment="Center" Cursor="Hand" Grid.Row="2" Click="btnRecordStop_Click">
+                        <Button.Template>
+                            <ControlTemplate>
+                                <Grid>
+                                    <Border BorderThickness="1" CornerRadius="2" BorderBrush="#FFD1D1D1" Background="White" />
+                                    <Rectangle Fill="#FF5D5D5D" Width="12" Height="12" HorizontalAlignment="Left" Margin="10,0,0,0" />
+                                    <Label BorderBrush="Gray" Content="Стоп" Foreground="Gray" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontWeight="Light" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="5,12" Margin="30,0,15,0" />
+                                </Grid>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
+                    <Button x:Name="btnRecordCANCEL" HorizontalAlignment="Center" VerticalAlignment="Center" Cursor="Hand" Grid.Row="3" Grid.ColumnSpan="2" Click="btnRecordCANCEL_Click">
+                        <Button.Template>
+                            <ControlTemplate>
+                                <Grid>
+                                    <Border BorderThickness="1" CornerRadius="2" BorderBrush="#FFD1D1D1" Background="White" />
+                                    <Label BorderBrush="Gray" Content="+" Foreground="Gray" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontWeight="Light" HorizontalAlignment="Left" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5" FontSize="16" Padding="0" Margin="10,0,6,2" >
+                                        <Label.RenderTransform>
+                                            <TransformGroup>
+                                                <ScaleTransform/>
+                                                <SkewTransform/>
+                                                <RotateTransform Angle="45"/>
+                                                <TranslateTransform/>
+                                            </TransformGroup>
+                                        </Label.RenderTransform>
+                                    </Label>
+
+                                </Grid>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+                
+                <Grid x:Name="gridRecordDone" Grid.RowSpan="2" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Fill="#FF323232" Opacity="0.96" StrokeThickness="0" Grid.ColumnSpan="2" />
+                    <TextBlock Grid.ColumnSpan="2" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="20,40,20,0" Foreground="White" Text="Запись звука завершена. Продолжить работу с записанными данными?" FontSize="16" TextWrapping="Wrap" />
+                    <Button x:Name="btnRecroderDoneCancel" Tag="prev" HorizontalAlignment="Left" VerticalAlignment="Bottom" Cursor="Hand" MaxWidth="160" Width="120" Grid.Column="1" Margin="10,0,0,40" Click="btnRecroderDoneCancel_Click">
+                        <Button.Template>
+                            <ControlTemplate>
+                                <Grid>
+                                    <Border BorderThickness="1" CornerRadius="2" BorderBrush="#FFFF7F7F" Background="White" />
+                                    <Label BorderBrush="Gray" Content="Отмена" Foreground="#FFFF7F7F" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="22,15" Background="{x:Null}" />
+                                </Grid>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button x:Name="btnRecroderDoneNext" Tag="next" HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="Hand" MaxWidth="160" Width="120" Margin="0,0,10,40" Click="btnRecroderDoneNext_Click">
+                        <Button.Template>
+                            <ControlTemplate>
+                                <Grid>
+                                    <Border BorderThickness="1" CornerRadius="2" BorderBrush="#FF7AB92D" Background="White" />
+                                    <Label BorderBrush="Gray" Content="Продолжить" Foreground="#FF7AB92D" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="22,15" />
+                                </Grid>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Grid>
 
     </Grid>
 </Window>
