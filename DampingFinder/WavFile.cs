@@ -24,7 +24,7 @@ namespace DampingFinder
         public int Channels { get; private set; }
         public int Bitrate { get; private set; }
         public int Length { get; private set; }
-        public int[] Data { get; private set; }
+        public int[] Data { get; set; }
         public int SamplesCount { get; set; }
 
         public alglib.complex[] ComplexFFT 

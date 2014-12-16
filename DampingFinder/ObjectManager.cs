@@ -10,5 +10,7 @@ namespace DampingFinder
         public static GraphFFT currentFftControl { get; set; }
         //public static GraphInverseFFT currentInverseFftControl { get; set; }
         public static WavFile CurrentFile { get; set; }
+
+        //public static List<Frequency> FrequencysSelectedList { get; set; }
     }
 }

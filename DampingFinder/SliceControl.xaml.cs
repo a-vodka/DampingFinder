@@ -35,6 +35,7 @@ namespace DampingFinder
         // Отрисовываем waveform.
         private void draw()
         {
+            gridCanvas.Children.Clear();
             if (_file.Channels == 1)
             {
                 gridCanvas.Children.Add(_file.getWaveformMono());
@@ -127,8 +128,18 @@ namespace DampingFinder
         {
             double leftPos = gridSlicer.ColumnDefinitions[0].Width.Value;
             double rightPos = gridSlicer.ColumnDefinitions[1].Width.Value;
-            MessageBox.Show(leftPos + " and " + rightPos);
+
+            int length = (int)rightPos * 100;
+            int index = (int)leftPos * 100;
+            int[] data = _file.Data;
+            int[] result = new int[length];
+            Array.Copy(data, index, result, 0, length);
+            _file.Data = result;
+
+            gridSlicer.Visibility = System.Windows.Visibility.Collapsed;
+            draw();
         }
+
 
         private void media_MediaEnded(object sender, RoutedEventArgs e)
         {

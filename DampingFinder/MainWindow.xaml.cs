@@ -14,6 +14,7 @@ using System.Windows.Shapes;
 using System.Windows.Media.Animation;
 using System.IO;
 using System.ComponentModel;
+using System.Collections.ObjectModel;
 using NAudio.Wave;
 using NAudio.CoreAudioApi;
 
@@ -33,6 +34,8 @@ namespace DampingFinder
         Button currentStepButton;       // Текущая нажатая кнопка.
         System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
 
+        public ObservableCollection<Frequency> Frequencies = new ObservableCollection<Frequency>();
+        
         // Визард.
         int wizardCurrentStep = 1;      // Последний открытый шаг.
         bool[] wizardOpenedSteps = new bool[5] { true, false, false, false, false }; 
@@ -40,9 +43,9 @@ namespace DampingFinder
         public MainWindow()
         {
             InitializeComponent();
-            LoadWasapiDevicesCombo();
+            LoadWasapiDevicesCombo();          
         }
-        
+
         // Обработчик кнопки "открыть". Загружаем звуковой файл и достаем из него всю необходимую о нем инфу.
         private void btnOpenFile_Click(object sender, RoutedEventArgs e)
         {
@@ -73,6 +76,14 @@ namespace DampingFinder
                 // Отрисовываем БПФ.
                 ObjectManager.CurrentFile.FFT();
                 gridGraphFFT.Children.Add(new GraphFFT(ObjectManager.CurrentFile.modulFFT));
+
+                // Заполнение листа частотами и создание привязки.
+                Frequencies = ObjectManager.currentFftControl.getSelectedFrequencys();
+
+                Binding b = new Binding();
+                b.Mode = BindingMode.OneWay;
+                b.Source = Frequencies;
+                frequencyListBox.SetBinding(ListBox.ItemsSourceProperty, b);
             }       
         }
 
@@ -91,7 +102,7 @@ namespace DampingFinder
         }
 
 
-        List<Frequency> fq = new List<Frequency>();
+        //List<Frequency> fq = new List<Frequency>();
         // Делает доступным следующий шаг.
         private void wizardOpenNextStep()
         {
@@ -101,8 +112,8 @@ namespace DampingFinder
             wizardCurrentStep++;
             wizardOpenedSteps[wizardCurrentStep - 1] = true;
 
-            if(ObjectManager.currentFftControl != null)
-                fq = ObjectManager.currentFftControl.getSelectedFrequencys();
+            //if(ObjectManager.currentFftControl != null)
+            //    fq = ObjectManager.currentFftControl.getSelectedFrequencys();
 
             switch (wizardCurrentStep)
             {
@@ -122,8 +133,6 @@ namespace DampingFinder
                     }
                 case 3:
                     {
-                        //runAsync(SOLVE_FFT);
-                        //gridCanvasFFT.Children.Add(currentFile.FFT());
                         rectR02.Fill = Colors.Blue;
                         rectL03.Fill = Colors.Blue;
                         el03.Fill = Colors.Blue;
@@ -133,8 +142,23 @@ namespace DampingFinder
                     }
                 case 4:
                     {
-                        scrollInverseFFT.Content = fq[0].getInverseFFT();
-                        scrollGraph.Content = fq[0].getGraph();
+                        // Список с графиками
+                        List<object> mapList = new List<object>();
+
+                        for (int i = 0; i < Frequencies.Count; i++)
+                        {
+                            Canvas invFFT = Frequencies[i].getInverseFFT();
+                            Canvas invFFTGraph = Frequencies[i].getGraph();
+                            Canvas decr = Frequencies[i].dampingGraph();
+
+                            // Анонимный тип для списка.
+                            var map = new { FreqValue = Frequencies[i].FrequencyValue + " Гц", InverseFFT = invFFT, InverseFFTGraph = invFFTGraph, DampingGraph = decr };
+                            
+                            mapList.Add(map);
+                        }
+
+                        listboxInverseFFT.ItemsSource = mapList;                        
+                        
                         rectR03.Fill = Colors.Blue;
                         rectL04.Fill = Colors.Blue;
                         el04.Fill = Colors.Blue;
@@ -176,6 +200,8 @@ namespace DampingFinder
                 case 1:
                     {
                         MessageBox.Show("Пока не будем открывать интро. В идеале подымаем алерт о том, что все очиститься.");
+                        gridIntro.Visibility = System.Windows.Visibility.Visible;
+                        currentStepGrid = gridIntro;
                         break;
                     }
                 case 2:
@@ -187,21 +213,21 @@ namespace DampingFinder
                     }
                 case 3:
                     {
-                        labelHeader.Content = "FFT";
+                        labelHeader.Content = "БПФ";
                         gridFFT.Visibility = System.Windows.Visibility.Visible;
                         currentStepGrid = gridFFT;
                         break;
                     }
                 case 4:
                     {
-                        labelHeader.Content = "INVERSE FFT";
+                        labelHeader.Content = "ОБРАТНОЕ БПФ";
                         gridInverseFFT.Visibility = System.Windows.Visibility.Visible;
                         currentStepGrid = gridInverseFFT;
                         break;
                     }
                 case 5:
                     {
-                        labelHeader.Content = "RESULTS";
+                        labelHeader.Content = "РЕЗУЛЬТАТЫ";
                         gridResults.Visibility = System.Windows.Visibility.Visible;
                         currentStepGrid = gridResults;
                         break;
@@ -471,6 +497,58 @@ namespace DampingFinder
                 gridSliceControlData.Children.Add(new SliceControl(ObjectManager.CurrentFile));
                 gridSliceControl.Visibility = System.Windows.Visibility.Visible;
             }
+        }
+
+        private void Button_MouseEnter(object sender, MouseEventArgs e)
+        {
+            switch (((Button)sender).Tag.ToString())
+            {
+                case "intro":
+                    {
+                        gridPopUp.Margin = new Thickness(0, 0, 320, 60);
+                        toolTipWizard.Title = "Шаг 1";
+                        toolTipWizard.Message = "Описание первого шага.";
+                        gridPopUp.Visibility = System.Windows.Visibility.Visible;
+                        break;
+                    }
+                case "waveform":
+                    {
+                        gridPopUp.Margin = new Thickness(0, 0, 160, 60);
+                        toolTipWizard.Title = "Шаг 2";
+                        toolTipWizard.Message = "Описание второго шага.";
+                        gridPopUp.Visibility = System.Windows.Visibility.Visible;
+                        break;
+                    }
+                case "FFT":
+                    {
+                        gridPopUp.Margin = new Thickness(0, 0, 0, 60);
+                        toolTipWizard.Title = "Шаг 3";
+                        toolTipWizard.Message = "Описание шага.";
+                        gridPopUp.Visibility = System.Windows.Visibility.Visible;
+                        break;
+                    }
+                case "inverseFFT":
+                    {
+                        gridPopUp.Margin = new Thickness(160, 0, 0, 60);
+                        toolTipWizard.Title = "Шаг 4";
+                        toolTipWizard.Message = "Описание шага.";
+                        gridPopUp.Visibility = System.Windows.Visibility.Visible;
+                        break;
+                    }
+                case "results":
+                    {
+                        gridPopUp.Margin = new Thickness(320, 0, 0, 60);
+                        toolTipWizard.Title = "Шаг 5";
+                        toolTipWizard.Message = "Описание шага.";
+                        gridPopUp.Visibility = System.Windows.Visibility.Visible;
+                        break;
+                    }
+            }
+        }
+
+        private void Button_MouseLeave(object sender, MouseEventArgs e)
+        {
+            gridPopUp.Visibility = System.Windows.Visibility.Collapsed;         
         }
 
 

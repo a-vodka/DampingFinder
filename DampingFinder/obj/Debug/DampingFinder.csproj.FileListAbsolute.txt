@@ -34,3 +34,5 @@ C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\Graph
 C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\GraphFFT.g.cs
 C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\SliceControl.baml
 C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\SliceControl.g.cs
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\ToolTip.baml
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\ToolTip.g.cs

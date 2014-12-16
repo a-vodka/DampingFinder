@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows.Shapes;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows;
 
 namespace DampingFinder
 {
@@ -12,54 +13,21 @@ namespace DampingFinder
     {
         private alglib.complex[] _inverseFFT = new alglib.complex[ObjectManager.CurrentFile.ComplexFFT.Length];
 
-        /// <summary>
-        /// Обратное преобразрвание Фурье.
-        /// </summary>
-        public alglib.complex[] InverseFFT { get { return this._inverseFFT; } }
-
-
-
-        /// <summary>
-        /// Огибающая к обратному преобразованию Фурье.
-        /// </summary>
-        public int Graph { get; set; }
-
-
-
-        /// <summary>
-        /// График демпфирования.
-        /// </summary>
-        public int DampingGraph { get; set; }
-
-
-
-        /// <summary>
-        /// Коэффициент демпфирования.
-        /// </summary>
-        public int DampingCoefficient { get; set; }
-
-
 
         /// <summary>
         /// Нужно ли считать ОПФ и строить график.
         /// </summary>
         public bool NeedToShow { get; set; }
 
-
-
         /// <summary>
         /// Возможно выбирать ширину вручную.
         /// </summary>
         public bool isManual { get; set; }
 
-
-
         /// <summary>
-        /// Частота.
+        /// Частота (например 90 Гц).
         /// </summary>
-        public int FrequencyNumber { get; set; }
-
-
+        public int FrequencyValue { get; set; }
 
         /// <summary>
         /// Ширина "окна".
@@ -67,18 +35,25 @@ namespace DampingFinder
         public int WindowWidth { get; set; }
 
 
-        public Frequency(int freq, int width) 
+        public Frequency(int freq, int width, bool ismanual = true, bool needtoshow = true) 
         {
-            FrequencyNumber = freq;
+            FrequencyValue = freq;
             WindowWidth = width;
+            NeedToShow = needtoshow;
+            isManual = ismanual;
         }
 
 
         // Создаем для удобства список из массива, который прошел обратное БПФ.
         List<double> fftArray = new List<double>();
+        List<double> fftArrayCompres = new List<double>();
+        /// <summary>
+        /// Строит график обратного БПФ.
+        /// </summary>
+        /// <returns></returns>
         public Canvas getInverseFFT()
         {            
-            int startPos = FrequencyNumber - (WindowWidth / 2);
+            int startPos = FrequencyValue - (WindowWidth / 2);
             int endPos = startPos + WindowWidth;
             for (int i = 0; i < ObjectManager.CurrentFile.ComplexFFT.Length; i++)
             {
@@ -132,6 +107,8 @@ namespace DampingFinder
                 line.Stroke = Brushes.Red;
                 result.Children.Add(line);
 
+                fftArrayCompres.Add(max);
+
                 xPos++;
                 arrayPosition += batch;
             }
@@ -145,62 +122,84 @@ namespace DampingFinder
         }
 
 
+
+        List<System.Windows.Point> pointsList = new List<System.Windows.Point>();
+        /// <summary>
+        /// Строит график огибающей обратного БПФ.
+        /// </summary>
+        /// <returns></returns>
         public Canvas getGraph()
         {
             Canvas result = new Canvas();
-
-            int xPos = 0;
-
-            List<List<double>> waves = new List<List<double>>();
-            List<double> wave = new List<double>();
+            
+            List<Dictionary<double, int>> waves = new List<Dictionary<double, int>>();
+            Dictionary<double, int> wave = new Dictionary<double, int>();
 
             // Достаем положительные волны.
-            for (int i = 0; i < this.fftArray.Count; i++)
+            for (int i = 0; i < this.fftArrayCompres.Count; i++)
             {
-                if (this.fftArray[i] > 0)
-                    wave.Add(this.fftArray[i]);
+                if (this.fftArrayCompres[i] > 0)
+                    wave.Add(this.fftArrayCompres[i], i);
                 else
                     if (wave.Count > 0)
                     {
-                        waves.Add(new List<double>(wave));
+                        waves.Add(new Dictionary<double, int>(wave));
                         wave.Clear();
                     }
             }
 
-
             // Ищем максимумы волн.
-            List<double> graph = new List<double>();
-            for (int i = 0; i < waves.Count; i++)
+            Dictionary<double, int> graph = new Dictionary<double, int>();
+            foreach (var item in waves)            
             {
-                double max = 0;
-                for (int k = 0; k < waves[i].Count; k++)
-                    max = Math.Max(waves[i][k], max);
-                graph.Add(max);
+                var max = item.Keys.Max();
+                graph.Add(max, item[max]);
             }
 
             // Масштаб.
-            double m = 0;
-            for (int i = 0; i < graph.Count; i++)
-                m = Math.Max(graph[i], m);
+            double m = graph.Keys.Max();
             double scale = 280 / m;
 
             // Рисуем график.
-            for (int j = 0; j < graph.Count; j+=2)
+            int xPos = 0;
+
+            // Получаем список точек.
+            pointsList.Clear();
+            foreach (var item in graph)
+            {
+                System.Windows.Point point = new System.Windows.Point();
+                point.X = item.Value;
+                point.Y = 300 - item.Key * scale;
+                pointsList.Add(point);
+
+                xPos = item.Value;
+            }         
+
+            for (int i = 1; i < pointsList.Count; i++)
             {
                 Line line = new Line();
-                line.X1 = xPos;
-                line.Y1 = 300 - graph[j] * scale;
-                line.X2 = xPos + 1;
-                line.Y2 = 300 - graph[j + 1] * scale;
+                line.X1 = pointsList[i - 1].X;
+                line.Y1 = pointsList[i - 1].Y;
+                line.X2 = pointsList[i].X;
+                line.Y2 = pointsList[i].Y;
 
                 line.StrokeThickness = 1;
                 line.Stroke = Brushes.Red;
                 result.Children.Add(line);
+            }
 
-                xPos += 2;
-
-                if (j > 3000)
-                    break;
+            // Рисуем каждую точку.
+            foreach (var item in pointsList)
+            {
+                Ellipse el = new Ellipse();
+                el.StrokeThickness = 0;
+                el.Fill = Brushes.Red;
+                el.Width = 6;
+                el.Height = 6;
+                el.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+                el.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+                el.Margin = new System.Windows.Thickness(item.X - 3, item.Y - 3, 0, 0);
+                result.Children.Add(el);
             }
 
             result.Background = Brushes.Beige;
@@ -209,5 +208,192 @@ namespace DampingFinder
 
             return result;
         }
+
+
+        /// <summary>
+        /// Строит график декремента колебаний по точкам огибающей 
+        /// (зависимость от времени)
+        /// </summary>
+        /// <returns></returns>
+        public Canvas dampingGraph()
+        {
+            Canvas result = new Canvas();
+            int xPos = 0;
+            
+            // Считаем декремент для каждой точки.
+            List<Point> dampPoints = new List<Point>();
+            int t = 1;
+            double pointYInZero = pointsList[0].Y;
+            foreach (Point point in pointsList)
+            {
+                Point p = new Point();
+                p.X = point.X;
+                
+                double beta = (-1 / (double)t) * Math.Log(point.Y / pointYInZero);
+                double decr = 2 * Math.PI * beta / (Math.Sqrt(1 - beta * beta));
+                p.Y = decr;
+
+                dampPoints.Add(p);
+
+                t++;
+                xPos = (int)point.X;
+            }
+
+            List<Point> dampPointsScaled = new List<Point>();
+            int maxIndex = 0;
+            double max = 0;
+            for(int i = 0; i < dampPoints.Count; i++)
+            {
+                if(Math.Abs(dampPoints[i].Y) > max)
+                {
+                    max = Math.Abs(dampPoints[i].Y);
+                    maxIndex = i;
+                }
+            }
+
+            double scale = 280 / dampPoints[maxIndex].Y;
+            foreach (Point p in dampPoints)
+            {
+                dampPointsScaled.Add(new Point(p.X, p.Y * scale));
+            }
+
+            for (int i = 1; i < dampPointsScaled.Count; i++)
+            {
+                Line line = new Line();
+                line.X1 = dampPointsScaled[i - 1].X;
+                line.Y1 = dampPointsScaled[i - 1].Y;
+                line.X2 = dampPointsScaled[i].X;
+                line.Y2 = dampPointsScaled[i].Y;
+
+                line.StrokeThickness = 1;
+                line.Stroke = Brushes.Red;
+                result.Children.Add(line);
+            }
+
+            // Рисуем каждую точку.
+            for (int i = 0; i < dampPointsScaled.Count; i++ )
+            {
+                var item = dampPointsScaled[i];
+            
+                Ellipse el = new Ellipse();
+                el.StrokeThickness = 0;
+                el.Fill = Brushes.Red;
+                el.Width = 6;
+                el.Height = 6;
+                el.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+                el.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+                el.Margin = new System.Windows.Thickness(item.X - 3, item.Y - 3, 0, 0);
+                el.ToolTip = "Value = " + dampPoints[i].Y;
+                result.Children.Add(el);
+            }
+
+            result.Background = Brushes.Beige;
+            result.Width = xPos;
+            result.Height = 300;
+
+            return result;
+        }
+
+
+
+
+        /// <summary>
+        /// Строит график декремента колебаний по точкам огибающей
+        /// (зависимость от амплитуды)
+        /// </summary>
+        /// <returns></returns>
+        public Canvas dampingGraphAmp()
+        {
+            Canvas result = new Canvas();
+            int xPos = 0;
+
+
+            List<Point> pointsListSorted = new List<Point>();
+            foreach (Point p in pointsList)            
+                pointsListSorted.Add(new Point(p.Y, p.X));
+
+            pointsListSorted = pointsListSorted.OrderBy(p => p.X).ToList();
+
+
+            // Считаем декремент для каждой точки.
+            List<Point> dampPoints = new List<Point>();
+            int t = 1;
+            double pointYInZero = pointsListSorted[1].Y;
+            foreach (Point point in pointsListSorted)
+            {
+                Point p = new Point();
+                p.X = point.X;
+
+                double beta = (-1 / (double)t) * Math.Log(point.Y / pointYInZero);
+                double decr = 2 * Math.PI * beta / (Math.Sqrt(1 - beta * beta));
+                p.Y = decr;
+
+                dampPoints.Add(p);
+
+                t++;
+                xPos = (int)point.X;
+            }
+
+            List<Point> dampPointsScaled = new List<Point>();
+            int maxIndex = 0;
+            double max = 0;
+            for (int i = 0; i < dampPoints.Count; i++)
+            {
+                if (Math.Abs(dampPoints[i].Y) > max)
+                {
+                    max = Math.Abs(dampPoints[i].Y);
+                    maxIndex = i;
+                }
+            }
+
+            double scale = 280 / dampPoints[maxIndex].Y;
+
+            foreach (Point p in dampPoints)
+            {
+                dampPointsScaled.Add(new Point(p.X, p.Y * scale));
+            }
+
+            for (int i = 1; i < dampPointsScaled.Count; i++)
+            {
+                try
+                {
+                    Line line = new Line();
+                    line.X1 = dampPointsScaled[i - 1].X;
+                    line.Y1 = dampPointsScaled[i - 1].Y;
+                    line.X2 = dampPointsScaled[i].X;
+                    line.Y2 = dampPointsScaled[i].Y;
+
+                    line.StrokeThickness = 1;
+                    line.Stroke = Brushes.Red;
+                    result.Children.Add(line);
+                }
+                catch { }
+            }
+
+            // Рисуем каждую точку.
+            foreach (var item in dampPointsScaled)
+            {
+                try
+                {
+                    Ellipse el = new Ellipse();
+                    el.StrokeThickness = 0;
+                    el.Fill = Brushes.Red;
+                    el.Width = 6;
+                    el.Height = 6;
+                    el.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+                    el.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+                    el.Margin = new System.Windows.Thickness(item.X - 3, item.Y - 3, 0, 0);
+                    result.Children.Add(el);
+                }
+                catch { }
+            }
+
+            result.Background = Brushes.Beige;
+            result.Width = xPos;
+            result.Height = 300;
+
+            return result;
+        }
+
     }
 }

@@ -1,0 +1,25 @@
+﻿<UserControl x:Class="DampingFinder.ToolTipWizardControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="120" d:DesignWidth="200">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="9*"/>
+            <RowDefinition Height="10"/>
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <Border Background="#FF93D8FF" CornerRadius="6" Grid.RowSpan="2" />
+            <Label x:Name="TitleControl" Foreground="White" Content="Шаг 1" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" FontSize="18" FontWeight="Bold" />
+            <Rectangle Fill="White" StrokeThickness="0" Height="1" VerticalAlignment="Bottom" Margin="40,0" />
+            <TextBox x:Name="MessageControl" Background="{x:Null}" BorderThickness="0" Foreground="White" Text="Описание первого шага. Например, разное! А еще можно всякой воды налить. Пушо то!" IsReadOnly="True" IsUndoEnabled="False" TextWrapping="Wrap" HorizontalContentAlignment="Center" Padding="6" Grid.Row="1" />
+        </Grid>
+        <Polygon Points="0,0 16,0 8,10" Fill="#FF93D8FF" Grid.Row="1" HorizontalAlignment="Center" />
+    </Grid>
+</UserControl>

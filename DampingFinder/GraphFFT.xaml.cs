@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Collections.ObjectModel;
 
 namespace DampingFinder
 {
@@ -20,9 +21,11 @@ namespace DampingFinder
     public partial class GraphFFT : UserControl
     {
         private List<double> _listPoints = new List<double>();
-        private List<int> _frequencysList = new List<int>();
+        //private List<int> _frequencysList = new List<int>();
+        private ObservableCollection<Frequency> _frequencysList = new ObservableCollection<Frequency>();
         private int _scaleXPos = 8;
         private double[] SCALE_ARRAY = new double[14] { 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 3, 4, 5 };
+
 
         /// <summary>
         /// Конструктор.
@@ -36,6 +39,7 @@ namespace DampingFinder
             Draw();           
             comboScale.SelectedIndex = _scaleXPos;
             ObjectManager.currentFftControl = this;
+            autoDetectFrequencys();
         }
 
 
@@ -46,14 +50,15 @@ namespace DampingFinder
         {
             // Показывает сколько Гц в одном элементе массива.
             int t1 = ObjectManager.CurrentFile.SampleRate;
-            int t2 = ObjectManager.CurrentFile.SamplesCount;
-            double elementWeight = (double)ObjectManager.CurrentFile.SampleRate / (double)ObjectManager.CurrentFile.SamplesCount;
+            int t2 = _listPoints.Count;
+            int t3 = ObjectManager.CurrentFile.SamplesCount;
+            double elementWeight = (double)ObjectManager.CurrentFile.SampleRate / (double)_listPoints.Count;
             int newSize;
             List<double> newArray = new List<double>();
 
             if (elementWeight < 1)
             {
-                newSize = (int)(1 / elementWeight);
+                newSize = (int)Math.Round(1 / elementWeight);
 
                 for (int i = 0; i < _listPoints.Count; i += newSize)
                 {
@@ -135,54 +140,56 @@ namespace DampingFinder
                 max = Math.Max(_listPoints[i], max);
             
 
-            // Порог для частоты. (90%)
+            // Порог для частоты. (70%)
             double freqTreshold = max * .7;
 
             // Ищем частоты, преодолевающие порог и записываем их в массив.
             for (int i = 10; i < _listPoints.Count; i++)            
                 if (_listPoints[i] > freqTreshold)
-                    _frequencysList.Add(i);
+                    _frequencysList.Add(new Frequency(i, 6));
 
             // Нормализуем частоты 2 раза, для точности.
             autoDetectedFreqNormalization();
             
 
             // Строим окна для каждой найденой частоты.
-            refreshWindows();          
+            refreshWindows();
+
+            //ObjectManager.FrequencysSelectedList = getSelectedFrequencys();
         }
 
 
         private void autoDetectedFreqNormalization()
         {
             Dictionary<double, int> freqNormalization = new Dictionary<double, int>();
-            List<int> freqTempMax = new List<int>();
+            List<Frequency> freqTempMax = new List<Frequency>();
 
             if (_frequencysList.Count > 1)
             {
                 for (int i = 0; i < _frequencysList.Count; i++)
                 {
-                    if (i < _frequencysList.Count && _frequencysList[i + 1] - _frequencysList[i] < 10)
+                    if (i < _frequencysList.Count - 1 && _frequencysList[i + 1].FrequencyValue - _frequencysList[i].FrequencyValue < 10)
                     {
                         int k = i + 1;
-                        while (k < _frequencysList.Count && _frequencysList[k] - _frequencysList[i] - freqNormalization.Count == 1)
+                        while (k < _frequencysList.Count && _frequencysList[k].FrequencyValue - _frequencysList[i].FrequencyValue - freqNormalization.Count == 1)
                         {
-                            freqNormalization.Add(_listPoints[_frequencysList[k]], _frequencysList[k]);
+                            freqNormalization.Add(_listPoints[_frequencysList[k].FrequencyValue], _frequencysList[k].FrequencyValue);
                             k++;
                         }
 
-                        freqNormalization.Add(_listPoints[_frequencysList[i]], _frequencysList[i]);
+                        freqNormalization.Add(_listPoints[_frequencysList[i].FrequencyValue], _frequencysList[i].FrequencyValue);
 
-                        freqTempMax.Add(freqNormalization[freqNormalization.Keys.Max()]);
+                        freqTempMax.Add(new Frequency(freqNormalization[freqNormalization.Keys.Max()], 6));
                         freqNormalization.Clear();
                         i = k;
                         k = 0;
                     }
                     else
-                        freqTempMax.Add(_frequencysList[i]);
+                        freqTempMax.Add(new Frequency(_frequencysList[i].FrequencyValue, 6));
                 }
 
                 _frequencysList.Clear();
-                _frequencysList = freqTempMax;
+                _frequencysList = new ObservableCollection<Frequency>(freqTempMax);
             }
         }
 
@@ -194,8 +201,8 @@ namespace DampingFinder
         /// <param name="winWidth">Ширина окна</param>
         private void addWindow(int freq)
         {
-            _frequencysList.Add(freq);
-            refreshWindows();
+            //_frequencysList.Add(freq);
+            //refreshWindows();
         }
 
 
@@ -221,16 +228,16 @@ namespace DampingFinder
             for (int i = 0; i < _frequencysList.Count; i++)
             {
                 // 1) не имеет смысла отображать меньше 10, 2) ломается))
-                if (_frequencysList[i] > 10)
+                if (_frequencysList[i].FrequencyValue > 10)
                 {
                     double length1 = 0;
                     double windowsSizes = 0;
                     for (int j = 0; j < gridPicker.ColumnDefinitions.Count; j++)
                         windowsSizes += gridPicker.ColumnDefinitions[j].Width.Value;
 
-                    length1 = gridPicker.ColumnDefinitions.Count > 0 ? _frequencysList[i] - windowsSizes - 10 : _frequencysList[i] - 10;
+                    length1 = gridPicker.ColumnDefinitions.Count > 0 ? _frequencysList[i].FrequencyValue - windowsSizes - _frequencysList[i].WindowWidth / 2 : _frequencysList[i].FrequencyValue - _frequencysList[i].WindowWidth / 2;
                     gridPicker.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(length1, GridUnitType.Pixel) });
-                    gridPicker.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(20, GridUnitType.Pixel) });
+                    gridPicker.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(_frequencysList[i].WindowWidth, GridUnitType.Pixel) });
                 }
             }
 
@@ -257,7 +264,7 @@ namespace DampingFinder
 
 
             // Вставляем палки, за которые будем двигать и менять ширину окон.
-            // Сейчас работает ужасно. Для лучшей работы необходимо ColumnDefinitions перевести в относительный формат.
+            // Для лучшей работы необходимо ColumnDefinitions перевести в относительный формат.
             for (int i = 0; i < rectCount - 1; i++)
             {
                 GridSplitter gsLeft = new GridSplitter();
@@ -351,16 +358,9 @@ namespace DampingFinder
         /// Возвращает список выделенных частот.
         /// </summary>
         /// <returns></returns>
-        public List<Frequency> getSelectedFrequencys()
+        public ObservableCollection<Frequency> getSelectedFrequencys()
         {
-            List<Frequency> result = new List<Frequency>();
-
-            foreach (var item in _frequencysList)
-            {
-                result.Add(new Frequency(item, 20));
-            }
-
-            return result;
+            return _frequencysList;
         }
 
     }
