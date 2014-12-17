@@ -239,31 +239,42 @@ namespace DampingFinder
                 xPos = (int)point.X;
             }
 
+            // Ищем максимальное и минимальное значение У, и в каких точках они лежат.
             List<Point> dampPointsScaled = new List<Point>();
             int maxIndex = 0;
+            int minIndex = 0;
             double max = 0;
+            double min = 0;
             for(int i = 0; i < dampPoints.Count; i++)
             {
-                if(Math.Abs(dampPoints[i].Y) > max)
+                if(dampPoints[i].Y > max)
                 {
-                    max = Math.Abs(dampPoints[i].Y);
+                    max = dampPoints[i].Y;
                     maxIndex = i;
+                }
+
+                if (dampPoints[i].Y < min)
+                {
+                    min = dampPoints[i].Y;
+                    minIndex = i;
                 }
             }
 
-            double scale = 280 / dampPoints[maxIndex].Y;
+            // Считаем коэфициент скалирования и скалируем все точки.
+            double scale = 140 / (Math.Abs(dampPoints[maxIndex].Y) > Math.Abs(dampPoints[minIndex].Y) ? Math.Abs(dampPoints[maxIndex].Y) : Math.Abs(dampPoints[minIndex].Y));
             foreach (Point p in dampPoints)
             {
-                dampPointsScaled.Add(new Point(p.X, p.Y * scale));
+                dampPointsScaled.Add(new Point(p.X, p.Y * scale * (-1)));
             }
 
+            // Рисуем линии графика.
             for (int i = 1; i < dampPointsScaled.Count; i++)
             {
                 Line line = new Line();
                 line.X1 = dampPointsScaled[i - 1].X;
-                line.Y1 = dampPointsScaled[i - 1].Y;
+                line.Y1 = 140 + dampPointsScaled[i - 1].Y;
                 line.X2 = dampPointsScaled[i].X;
-                line.Y2 = dampPointsScaled[i].Y;
+                line.Y2 = 140 + dampPointsScaled[i].Y;
 
                 line.StrokeThickness = 1;
                 line.Stroke = Brushes.Red;
@@ -282,7 +293,7 @@ namespace DampingFinder
                 el.Height = 6;
                 el.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 el.VerticalAlignment = System.Windows.VerticalAlignment.Top;
-                el.Margin = new System.Windows.Thickness(item.X - 3, item.Y - 3, 0, 0);
+                el.Margin = new System.Windows.Thickness(item.X - 3, 140 + item.Y - 3, 0, 0);
                 el.ToolTip = "Value = " + dampPoints[i].Y;
                 result.Children.Add(el);
             }
@@ -334,34 +345,44 @@ namespace DampingFinder
                 xPos = (int)point.X;
             }
 
+            // Ищем максимальное и минимальное значение У, и в каких точках они лежат.
             List<Point> dampPointsScaled = new List<Point>();
             int maxIndex = 0;
+            int minIndex = 0;
             double max = 0;
+            double min = 0;
             for (int i = 0; i < dampPoints.Count; i++)
             {
-                if (Math.Abs(dampPoints[i].Y) > max)
+                if (dampPoints[i].Y > max)
                 {
-                    max = Math.Abs(dampPoints[i].Y);
+                    max = dampPoints[i].Y;
                     maxIndex = i;
+                }
+
+                if (dampPoints[i].Y < min)
+                {
+                    min = dampPoints[i].Y;
+                    minIndex = i;
                 }
             }
 
-            double scale = 280 / dampPoints[maxIndex].Y;
-
+            // Считаем коэфициент скалирования и скалируем все точки.
+            double scale = 140 / (Math.Abs(dampPoints[maxIndex].Y) > Math.Abs(dampPoints[minIndex].Y) ? Math.Abs(dampPoints[maxIndex].Y) : Math.Abs(dampPoints[minIndex].Y));
             foreach (Point p in dampPoints)
             {
-                dampPointsScaled.Add(new Point(p.X, p.Y * scale));
+                dampPointsScaled.Add(new Point(p.X, p.Y * scale * (-1)));
             }
 
+            // Рисуем линии графика.
             for (int i = 1; i < dampPointsScaled.Count; i++)
             {
                 try
                 {
                     Line line = new Line();
                     line.X1 = dampPointsScaled[i - 1].X;
-                    line.Y1 = dampPointsScaled[i - 1].Y;
+                    line.Y1 = 140 + dampPointsScaled[i - 1].Y;
                     line.X2 = dampPointsScaled[i].X;
-                    line.Y2 = dampPointsScaled[i].Y;
+                    line.Y2 = 140 + dampPointsScaled[i].Y;
 
                     line.StrokeThickness = 1;
                     line.Stroke = Brushes.Red;
@@ -371,10 +392,12 @@ namespace DampingFinder
             }
 
             // Рисуем каждую точку.
-            foreach (var item in dampPointsScaled)
+            for (int i = 0; i < dampPointsScaled.Count; i++)
             {
                 try
                 {
+                    var item = dampPointsScaled[i];
+
                     Ellipse el = new Ellipse();
                     el.StrokeThickness = 0;
                     el.Fill = Brushes.Red;
@@ -382,7 +405,8 @@ namespace DampingFinder
                     el.Height = 6;
                     el.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                     el.VerticalAlignment = System.Windows.VerticalAlignment.Top;
-                    el.Margin = new System.Windows.Thickness(item.X - 3, item.Y - 3, 0, 0);
+                    el.Margin = new System.Windows.Thickness(item.X - 3, 140 + item.Y - 3, 0, 0);
+                    el.ToolTip = "Value = " + dampPoints[i].Y;
                     result.Children.Add(el);
                 }
                 catch { }

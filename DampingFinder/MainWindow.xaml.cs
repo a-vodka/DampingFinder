@@ -150,9 +150,17 @@ namespace DampingFinder
                             Canvas invFFT = Frequencies[i].getInverseFFT();
                             Canvas invFFTGraph = Frequencies[i].getGraph();
                             Canvas decr = Frequencies[i].dampingGraph();
+                            //Canvas decrAmp = Frequencies[i].dampingGraphAmp();
 
                             // Анонимный тип для списка.
-                            var map = new { FreqValue = Frequencies[i].FrequencyValue + " Гц", InverseFFT = invFFT, InverseFFTGraph = invFFTGraph, DampingGraph = decr };
+                            var map = new 
+                            { 
+                                FreqValue = Frequencies[i].FrequencyValue + " Гц", 
+                                InverseFFT = invFFT, 
+                                InverseFFTGraph = invFFTGraph, 
+                                DampingGraph = decr,
+                                //DampingGraphAmp = decrAmp
+                            };
                             
                             mapList.Add(map);
                         }

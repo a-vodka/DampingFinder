@@ -20,6 +20,8 @@ namespace DampingFinder
     /// </summary>
     public partial class GraphFFT : UserControl
     {
+        private const int DEFAULT_WINDOW_SIZE = 6;
+
         private List<double> _listPoints = new List<double>();
         //private List<int> _frequencysList = new List<int>();
         private ObservableCollection<Frequency> _frequencysList = new ObservableCollection<Frequency>();
@@ -146,7 +148,7 @@ namespace DampingFinder
             // Ищем частоты, преодолевающие порог и записываем их в массив.
             for (int i = 10; i < _listPoints.Count; i++)            
                 if (_listPoints[i] > freqTreshold)
-                    _frequencysList.Add(new Frequency(i, 6));
+                    _frequencysList.Add(new Frequency(i, DEFAULT_WINDOW_SIZE));
 
             // Нормализуем частоты 2 раза, для точности.
             autoDetectedFreqNormalization();
@@ -179,13 +181,13 @@ namespace DampingFinder
 
                         freqNormalization.Add(_listPoints[_frequencysList[i].FrequencyValue], _frequencysList[i].FrequencyValue);
 
-                        freqTempMax.Add(new Frequency(freqNormalization[freqNormalization.Keys.Max()], 6));
+                        freqTempMax.Add(new Frequency(freqNormalization[freqNormalization.Keys.Max()], DEFAULT_WINDOW_SIZE));
                         freqNormalization.Clear();
                         i = k;
                         k = 0;
                     }
                     else
-                        freqTempMax.Add(new Frequency(_frequencysList[i].FrequencyValue, 6));
+                        freqTempMax.Add(new Frequency(_frequencysList[i].FrequencyValue, DEFAULT_WINDOW_SIZE));
                 }
 
                 _frequencysList.Clear();
