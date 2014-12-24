@@ -38,3 +38,5 @@ C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\ToolT
 C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\ToolTip.g.cs
 C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\ScalebleCanvas.baml
 C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\ScalebleCanvas.g.cs
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\GraphView.baml
+C:\Users\Artem Reva\Documents\GitHub\DampingFinder\DampingFinder\obj\Debug\GraphView.g.cs

@@ -30,15 +30,25 @@ namespace DampingFinder
         public int FrequencyValue { get; set; }
 
         /// <summary>
+        /// Частота (точное значение).
+        /// </summary>
+        public int FrequencyValueOrigin { get; set; }
+
+        /// <summary>
         /// Ширина "окна".
         /// </summary>
         public int WindowWidth { get; set; }
 
+        public int WindowWidthOrigin { get; set; }
 
-        public Frequency(int freq, int width, bool ismanual = true, bool needtoshow = true) 
+
+
+        public Frequency(int freq, int width, double freqScale, bool ismanual = true, bool needtoshow = true) 
         {
-            FrequencyValue = freq;
+            FrequencyValueOrigin = freq;
+            FrequencyValue = Convert.ToInt32(freq * freqScale);
             WindowWidth = width;
+            WindowWidthOrigin = Convert.ToInt32(width / freqScale);
             NeedToShow = needtoshow;
             isManual = ismanual;
         }
@@ -52,7 +62,7 @@ namespace DampingFinder
         /// </summary>
         /// <returns></returns>
         public Canvas getInverseFFT()
-        {            
+        {
             int startPos = FrequencyValue - (WindowWidth / 2);
             int endPos = startPos + WindowWidth;
             for (int i = 0; i < ObjectManager.CurrentFile.ComplexFFT.Length; i++)
@@ -261,7 +271,7 @@ namespace DampingFinder
             }
 
             // Считаем коэфициент скалирования и скалируем все точки.
-            double scale = 140 / (Math.Abs(dampPoints[maxIndex].Y) > Math.Abs(dampPoints[minIndex].Y) ? Math.Abs(dampPoints[maxIndex].Y) : Math.Abs(dampPoints[minIndex].Y));
+            double scale = 150 / (Math.Abs(dampPoints[maxIndex].Y) > Math.Abs(dampPoints[minIndex].Y) ? Math.Abs(dampPoints[maxIndex].Y) : Math.Abs(dampPoints[minIndex].Y));
             foreach (Point p in dampPoints)
             {
                 dampPointsScaled.Add(new Point(p.X, p.Y * scale * (-1)));
@@ -272,9 +282,9 @@ namespace DampingFinder
             {
                 Line line = new Line();
                 line.X1 = dampPointsScaled[i - 1].X;
-                line.Y1 = 140 + dampPointsScaled[i - 1].Y;
+                line.Y1 = 150 + dampPointsScaled[i - 1].Y;
                 line.X2 = dampPointsScaled[i].X;
-                line.Y2 = 140 + dampPointsScaled[i].Y;
+                line.Y2 = 150 + dampPointsScaled[i].Y;
 
                 line.StrokeThickness = 1;
                 line.Stroke = Brushes.Red;
@@ -293,7 +303,7 @@ namespace DampingFinder
                 el.Height = 6;
                 el.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
                 el.VerticalAlignment = System.Windows.VerticalAlignment.Top;
-                el.Margin = new System.Windows.Thickness(item.X - 3, 140 + item.Y - 3, 0, 0);
+                el.Margin = new System.Windows.Thickness(item.X - 3, 150 + item.Y - 3, 0, 0);
                 el.ToolTip = "Value = " + dampPoints[i].Y;
                 result.Children.Add(el);
             }

@@ -69,6 +69,9 @@
     <Compile Include="GraphFFT.xaml.cs">
       <DependentUpon>GraphFFT.xaml</DependentUpon>
     </Compile>
+    <Compile Include="GraphView.xaml.cs">
+      <DependentUpon>GraphView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ObjectManager.cs" />
     <Compile Include="ScalebleCanvas.xaml.cs">
       <DependentUpon>ScalebleCanvas.xaml</DependentUpon>
@@ -85,6 +88,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="GraphFFT.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="GraphView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

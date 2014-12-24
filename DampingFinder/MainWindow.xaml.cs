@@ -176,6 +176,9 @@ namespace DampingFinder
                     }
                 case 5:
                     {
+                        GraphView gv = new GraphView(Frequencies[0].dampingGraph(), 0.2, 0.3);
+                        scrollGraph.Children.Add(gv);
+                        gv.SaveAs();
                         rectR04.Fill = Colors.Blue;
                         rectL05.Fill = Colors.Blue;
                         el05.Fill = Colors.Blue;
